@@ -71,7 +71,6 @@ class StreamAsk(APIView):
 from django.http import StreamingHttpResponse
 
 
-
 from dashscope import Generation
 from datetime import datetime
 import random
@@ -211,12 +210,6 @@ def generate_sse(responses):
                 return "no mes"
             
 def sse_view(request):
-    # def event_stream():
-    #     while True:
-    #         # 发送数据给客户端
-    #         yield f"data: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-    #         time.sleep(1)  # 每秒发送一次
-
     user_input = request.GET.get('ask')  # 调用函数获取用户输入   
     messages.append({'role': 'user', 'content': user_input})  
 
@@ -227,7 +220,6 @@ def sse_view(request):
                             incremental_output=True  # 增量式流式输出
                             ) 
     
-    print(responses)
     response = StreamingHttpResponse(
         generate_sse(responses),
         content_type="text/event-stream",
