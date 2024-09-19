@@ -1,11 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HelloWorld from '../views/HelloWorld.vue'
+import testsse from '../views/testsse.vue'
 
 
 const routes = [{
         path: '/',
         name: 'HelloWorld',
         component: HelloWorld
+    }, {
+        path: '/tsse',
+        name: 'testsse',
+        component: testsse
     }
     // 其他路由...  
 ]

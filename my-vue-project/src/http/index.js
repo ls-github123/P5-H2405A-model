@@ -10,10 +10,4 @@ const http = axios.create({
 
 
 
-export const addMes = () => {
-    return { "code": 11200 }
-}
-
-
-
 export default http;

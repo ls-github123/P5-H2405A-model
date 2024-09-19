@@ -31,12 +31,6 @@ const formLabelAlign = reactive({
   name: '',  
 })  
   
-// const test = () => {  
-//   http.post('ask/').then(res => {  
-//     alert('222')
-//     mes.value = res.data.mes  
-//   })  
-// }  
   
 const onSubmit = () => {  
   http.post('ask/', formLabelAlign).then(res => {  

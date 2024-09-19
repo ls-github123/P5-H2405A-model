@@ -38,7 +38,7 @@ export default {
   methods: {
     connectToStream() {
       
-       this.source = new EventSource("http://localhost:8000/ssetest/?ask="+this.askmes);
+       this.source = new EventSource("http://localhost:8000/sse/?ask="+this.askmes);
 
         this.source.onmessage = (event=> {
           this.resmes = this.resmes + event.data
