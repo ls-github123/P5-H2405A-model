@@ -1,21 +1,8 @@
-<!-- StreamEvents.vue -->
 <template>
-  <div>
-    <h2>Server-Sent Events Example</h2>
-
-     <el-form :inline="true"  class="demo-form-inline">
-  <el-form-item label="问题">
-    <el-input v-model="askmes" placeholder="请输入问题"></el-input>
-  </el-form-item>
-  
-  <el-form-item>
-    <el-button type="primary" @click="connectToStream">查询</el-button>
-  </el-form-item>
-</el-form>
-
+  <div id="app">
+    <h1>Server-Sent Events Example</h1>
     <ul>
-     
-      <div id="notifications">{{resmes}}</div>
+      <li v-for="(message, index) in messages" :key="index">{{ message }}</li>
     </ul>
   </div>
 </template>
@@ -24,38 +11,37 @@
 export default {
   data() {
     return {
-      askmes:'',
-      source: null,
-      resmes:''
+      messages: []
     };
   },
   mounted() {
-    // this.connectToStream();
-  },
-  beforeDestroy() {
-    this.disconnectStream();
+    this.connectToSSE();
   },
   methods: {
-    connectToStream() {
-      
-       this.source = new EventSource("http://localhost:8000/sse/?ask="+this.askmes);
+    connectToSSE() {
+      const eventSource = new EventSource('http://localhost:8000/sse/?ask=小米是谁');
 
-        this.source.onmessage = (event=> {
-          this.resmes = this.resmes + event.data
-        });
+      eventSource.onmessage = (event) => {
+        this.messages.push(event.data);
+        if (this.messages.length > 10) {
+          this.messages.shift(); // 保持最多10条消息
+        }
+      };
 
-        this.source.onerror = (error=> {
-            console.error('EventSource failed:', error);
-            this.source.close();
-            this.source = null;
-        });
-    },
-    disconnectStream() {
-      if (this.source) {
-        this.source.close();
-        this.source = null;
-      }
-    },
-  },
+      eventSource.onerror = (error) => {
+        console.error('EventSource failed:', error);
+        eventSource.close();
+      };
+    }
+  }
 };
 </script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>

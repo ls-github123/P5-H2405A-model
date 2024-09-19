@@ -69,39 +69,7 @@ class StreamAsk(APIView):
     
     
 from django.http import StreamingHttpResponse
-from django.views.decorators.http import require_GET
 
-
-def generate_sse(responses):
-    for response in responses:
-        if response.status_code == HTTPStatus.OK:
-            data1 = response.output.choices[0]['message']['content']
-            # data = f"data: {data1}\n\n"
-            print(data1)
-            if data1:
-                yield data1.encode('gbk')  # 必须编码为字节串
-            else:
-                return "no mes"
-
-@require_GET
-def sse_notifications(request):
-    user_input = request.GET.get('ask')  # 调用函数获取用户输入   
-    messages.append({'role': 'user', 'content': user_input})  
-
-    responses = Generation.call(model="qwen-turbo",  
-                            messages=messages,  
-                            result_format='message',
-                            stream=True,  # 设置输出方式为流式输出
-                            incremental_output=True  # 增量式流式输出
-                            ) 
-    
-    
-    response = StreamingHttpResponse(
-        generate_sse(responses),
-        content_type="text/event-stream",
-    )
-    response["Cache-Control"] = "no-cache"
-    return response
 
 
 from dashscope import Generation
@@ -226,3 +194,43 @@ class ToolsView(APIView):
 # 一个工具类是处理订单的问题，获取到参数‘订单号’查询订单表返回订单信息
 #定义一个工具类，调用天气预报接口获取到天气信息
 #定义一个工具类，调用百度api接口身份证验证
+
+# myapp/views.py
+
+import time
+from django.http import StreamingHttpResponse
+
+def generate_sse(responses):
+    for response in responses:
+        if response.status_code == HTTPStatus.OK:
+            data1 = response.output.choices[0]['message']['content']
+            data = f"data: {data1}\n\n"
+            if data1:
+                yield data.encode('utf-8')  # 必须编码为字节串
+            else:
+                return "no mes"
+            
+def sse_view(request):
+    # def event_stream():
+    #     while True:
+    #         # 发送数据给客户端
+    #         yield f"data: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+    #         time.sleep(1)  # 每秒发送一次
+
+    user_input = request.GET.get('ask')  # 调用函数获取用户输入   
+    messages.append({'role': 'user', 'content': user_input})  
+
+    responses = Generation.call(model="qwen-turbo",  
+                            messages=messages,  
+                            result_format='message',
+                            stream=True,  # 设置输出方式为流式输出
+                            incremental_output=True  # 增量式流式输出
+                            ) 
+    
+    print(responses)
+    response = StreamingHttpResponse(
+        generate_sse(responses),
+        content_type="text/event-stream",
+    )
+    response["Cache-Control"] = "no-cache"
+    return response

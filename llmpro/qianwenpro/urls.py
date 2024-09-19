@@ -22,6 +22,6 @@ urlpatterns = [
     path("test/", Test.as_view()),
     path('ask/',Ask.as_view()),
     path('streamask/',StreamAsk.as_view()),
-    path('sse/',sse_notifications),
+    path('sse/',sse_view),
     path('toolsView/',ToolsView.as_view())
 ]
