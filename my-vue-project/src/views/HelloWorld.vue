@@ -7,11 +7,11 @@
       class="form-style"  
     >  
       <el-form-item label="Name">  
-        <el-input v-model="formLabelAlign.name" placeholder="请输入名称" />  
+        <el-input v-model="formLabelAlign.askmes" placeholder="请输入名称" />  
       </el-form-item>  
   
       <el-form-item>  
-        <el-button type="primary" @click="onSubmit">创建</el-button>  
+        <el-button type="primary" @click="onSubmit">提交</el-button>  
         <el-button>取消</el-button>  
       </el-form-item>  
   
@@ -31,23 +31,24 @@ const formLabelAlign = reactive({
   name: '',  
 })  
   
-const test = () => {  
-  http.get('test/').then(res => {  
-    alert('222')
+// const test = () => {  
+//   http.post('ask/').then(res => {  
+//     alert('222')
+//     mes.value = res.data.mes  
+//   })  
+// }  
+  
+const onSubmit = () => {  
+  http.post('ask/', formLabelAlign).then(res => {  
+    // 可以添加一些处理响应的逻辑  
+    console.log(res)  
     mes.value = res.data.mes  
   })  
 }  
   
-const onSubmit = () => {  
-  http.post('test/', formLabelAlign).then(res => {  
-    // 可以添加一些处理响应的逻辑  
-    console.log(res)  
-  })  
-}  
-  
-onMounted(() => {  
-  test()  
-})  
+// onMounted(() => {  
+//   test()  
+// })  
 </script>  
   
 <style scoped>  

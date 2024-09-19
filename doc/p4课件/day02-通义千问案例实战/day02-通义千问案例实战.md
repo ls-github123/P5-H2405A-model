@@ -733,6 +733,56 @@ if __name__ == '__main__':
 
 <img src="images/p796046.png">
 
+### 2.7Transformer介绍
+
+#### 2.7.1 原理分析
+
+### Transformer 的基本组成部分
+
+Transformer 主要由编码器（Encoder）和解码器（Decoder）两部分组成，其中每个部分都包含了若干个相同的层（Layer）。以下是 Transformer 的主要组成部分：
+
+#### 1. 多头注意力机制（Multi-head Attention）
+
+- **自注意力（Self-Attention）**：通过计算序列中不同位置的单词之间的关系，使得模型能够关注到句子中的不同部分。自注意力机制允许模型在处理句子时关注到上下文中的不同位置。
+- **多头注意力（Multi-head Attention）**：通过将自注意力机制分成多个“头”（head），每个头独立地计算注意力，然后将结果合并，从而使得模型可以从不同的表示子空间中捕捉信息。
+
+#### 2. 前馈神经网络（Feed Forward Neural Network）
+
+- **全连接层（Fully Connected Layer）**：每个 Transformer 层中包含一个前馈神经网络，用于进一步处理和变换输入数据。前馈网络通常由两个线性变换加上 ReLU 激活函数组成。
+
+#### 3. 层规范化（Layer Normalization）
+
+- **规范化层（Normalization Layer）**：在每个子层之前应用层规范化，有助于加速训练过程，并提高模型的稳定性。
+
+#### 4. 残差连接（Residual Connections）
+
+- **跳跃连接（Skip Connections）**：在每个子层之后添加残差连接，即将子层的输入直接加到子层的输出上，有助于缓解梯度消失问题，并促进信息的传递。
+
+### Transformer 的工作原理
+
+#### 1. 编码器（Encoder）
+
+编码器由多个相同的层堆叠而成，每个层包括两个子层：
+
+- **多头自注意力层（Multi-head Self-Attention Layer）**：计算输入序列的自注意力得分。
+- **前馈神经网络层（Feed Forward Network Layer）**：对自注意力层的输出进行进一步处理。
+
+#### 2. 解码器（Decoder）
+
+解码器同样由多个相同的层堆叠而成，每个层包括三个子层：
+
+- **多头自注意力层（Masked Multi-head Self-Attention Layer）**：与编码器类似，但是为了防止解码器看到未来的位置，使用了一个掩码（mask）来屏蔽掉未来位置的信息。
+- **多头注意力层（Multi-head Attention Layer）**：使用编码器的输出作为键和值，当前解码器层的输出作为查询，计算注意力得分。
+- **前馈神经网络层（Feed Forward Network Layer）**：对注意力层的输出进行进一步处理。
+
+### Transformer 的优势
+
+- **并行计算**：与传统的 RNN 相比，Transformer 不需要按顺序逐个处理序列中的元素，可以并行计算，提高了训练速度。
+- **长距离依赖**：通过自注意力机制，Transformer 能够很好地处理长距离依赖问题。
+- **灵活性**：Transformer 可以很容易地扩展到更大的规模，并且可以应用于多种 NLP 任务。
+
+
+
 ## **四、本单元知识总结**
 
 ```python

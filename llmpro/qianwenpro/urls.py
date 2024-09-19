@@ -20,4 +20,5 @@ from .views import *
 
 urlpatterns = [
     path("test/", Test.as_view()),
+    path('ask/',Ask.as_view())
 ]
