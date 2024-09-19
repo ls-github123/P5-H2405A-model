@@ -16,7 +16,6 @@ const source = ref('')
 
 const submit=()=>{
     source.value = new EventSource("http://localhost:8000/sse/?ask="+mes.value);
-
     //接收消息
     source.value.onmessage = (event=> {
         answer.value = answer.value + event.data

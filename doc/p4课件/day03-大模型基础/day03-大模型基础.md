@@ -228,67 +228,40 @@ Vue端
 vue
 
 ~~~vue
-<!-- StreamEvents.vue -->
 <template>
   <div>
-    <h2>Server-Sent Events Example</h2>
-
-     <el-form :inline="true"  class="demo-form-inline">
-  <el-form-item label="问题">
-    <el-input v-model="askmes" placeholder="请输入问题"></el-input>
-  </el-form-item>
-  
-  <el-form-item>
-    <el-button type="primary" @click="connectToStream">查询</el-button>
-  </el-form-item>
-</el-form>
-
-    <ul>
-     
-      <div id="notifications">{{resmes}}</div>
-    </ul>
+  请输入问题<el-input v-model="mes"></el-input>
+  <el-button @click="submit">提交</el-button>
+  {{answer}}
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      askmes:'',
-      source: null,
-      resmes:''
-    };
-  },
-  mounted() {
-    // this.connectToStream();
-  },
-  beforeDestroy() {
-    this.disconnectStream();
-  },
-  methods: {
-    connectToStream() {
-      
-       this.source = new EventSource("http://localhost:8000/fg/notifications/?ask="+this.askmes);
+<script lang="ts" setup>  
+import { ref } from 'vue'  
+import http from "../http";  
 
-        this.source.onmessage = (event=> {
-          this.resmes = this.resmes + event.data
-        });
+const mes = ref('')
+const answer = ref('')
+const source = ref('')
 
-        this.source.onerror = (error=> {
-            console.error('EventSource failed:', error);
-            this.source.close();
-            this.source = null;
-        });
-    },
-    disconnectStream() {
-      if (this.source) {
-        this.source.close();
-        this.source = null;
-      }
-    },
-  },
-};
+const submit=()=>{
+    source.value = new EventSource("http://localhost:8000/sse/?ask="+mes.value);
+    //接收消息
+    source.value.onmessage = (event=> {
+        answer.value = answer.value + event.data
+    });
+
+    source.value.onerror = (error=> {
+        console.error('EventSource failed:', error);
+        source.value.close();
+        source.value = null;
+    });
+}
 </script>
+
+<style>
+
+</style>
 ~~~
 
 接口代码

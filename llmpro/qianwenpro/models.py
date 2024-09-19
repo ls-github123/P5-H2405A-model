@@ -4,4 +4,8 @@ from django.db import models
 class Testmodel(models.Model):
     name = models.CharField(max_length=50)  
     mobile = models.CharField(max_length=11,unique=True)  
-  
+
+
+class Torders(models.Model):
+    orderno = models.CharField(max_length=50)  
+    descip = models.CharField(max_length=200)  

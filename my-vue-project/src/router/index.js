@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HelloWorld from '../views/HelloWorld.vue'
-import testsse from '../views/testsse.vue'
+import tsse from '../views/tsse.vue'
 
 
 const routes = [{
@@ -9,8 +9,8 @@ const routes = [{
         component: HelloWorld
     }, {
         path: '/tsse',
-        name: 'testsse',
-        component: testsse
+        name: 'tsse',
+        component: tsse
     }
     // 其他路由...  
 ]
