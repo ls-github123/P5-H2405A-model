@@ -352,13 +352,41 @@ def sse_views(request):
     response['Cache-Control'] = 'no-cache'
     return response
 
+import random
+class RandromCount(APIView):
+    def get(self,request):
+        #获取列表
+        olist = request.GET.get('olist')
+        #定义一个温度列表
+        nlist = []
+        for i in olist:
+            nlist.append(random.randint(10,100))
+        return nlist
 
+def getdata(olist):
+        #获取列表
+        # olist = request.GET.get('olist')
+        #定义一个温度列表
+        nlist = []
+        for i in olist:
+            nlist.append(random.randint(10,100))
+        return nlist    
 
 def get_data():
     while True:
         orderlist = ['1001','1002','1003']
-        numberlist = [10,30,40]
-        errormes = "1001温度过高"
+        # data = requests.get('http://localhost:8000/randromCount/',params={"olist":orderlist})
+        #设备对应的温度
+        numberlist = getdata(orderlist)
+        print(numberlist)#[10,20,30]
+        errormes = ""
+        # for (i,index) in enumerate(orderlist):
+        #     #查询数据库，获取当前设备的正常范围值
+        #     ovalue = OrdersValue.objects.filter(orderno=i).first()
+        #     if numberlist[index]<ovalue.min or numberlist[index]>ovalue.max:
+        #         errormes = errormes + "号码为"+i+"的目前温度为"+numberlist[index]+",出现异常，请关注"
+            
+            
         list = json.dumps({"orderlist":orderlist,"numberlist":numberlist,'errormes':errormes})
         yield f"data: {list}\n\n"
         time.sleep(3)

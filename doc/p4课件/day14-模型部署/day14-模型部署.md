@@ -56,7 +56,149 @@ HuggingFace 是一个自然语言处理（NLP）领域的开源社区和平台�
 5. 智能体开发框架： ModelScope还推出了ModelScope-Agent开发框架，如MSAgent-Qwen-7B，允许用户打造属于自己的智能体。这个框架提供了丰富的环境配置选项，支持单卡运行，并有一定的显存要求。
 ~~~
 
-### 3.千问模型本地部署
+### 3.服务器领取
+
+1.打开网址
+
+https://modelscope.cn/models/ZhipuAI/glm-4-9b/files
+
+![image-20240913170622975](img/image-20240913170622975.png)
+
+  2.阿里领取服务器
+
+~~~
+# 在线GPU环境
+
+## 阿里云PAI
+
+每天发送500份
+
+搜索中输入 PAI-DSW
+
+~~~
+
+3.点击开始使用
+
+~~~
+命令行下载
+请先通过如下命令安装ModelScope
+
+pip install modelscope
+下载完整模型repo
+modelscope download --model ZhipuAI/glm-4-9b
+
+~~~
+
+安装虚拟环境
+
+### **Anaconda**
+
+conda是为了解决传统的虚拟环境问题而出现的虚拟环境管理工具，conda在virtualenv基础上，提取了公共代码保存到一个公共目录，独立代码分离开来的模式解决了virtualenv的解释器复制问题，同时conda还可以通过自动管理python解释器的功能，允许我们创建虚拟环境目录时自由的选择不同的python解释器版本。conda一共有2个版本：miniconda与anaconda。
+
+其中，anaconda是conda的完整版本，内置了将近300个关于服务端开发，人工智能，数据分析，爬虫，测试，运维等常用第三方模块。而miniconda则是conda的简单版本，内置了将近30个常用第三方模块。所以学习的时候，建议在本地安装anaconda，在公司开发或项目部署时使用miniconda。
+
+anaconda下载地址：https://repo.anaconda.com/archive/
+
+miniconda下载地址：https://repo.anaconda.com/miniconda/
+
+conda还提供了一个类似pypi的包模块管理库，可以让我们搜索到10年前的包：https://anaconda.org/
+
+| 命令                                                         | 描述                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| conda -V                                                     | 查看conda版本                                                |
+| **conda info**                                               | 查看当前Anaconda的系统配置信息                               |
+| **conda env list**                                           | 列出当前系统中所有虚拟环境，环境列表左边`*`号表示当前所在环境，<br>也可以使用`conda info -e`查看，注意：conda安装到本地以后，默认就提供了一个全局版本的虚拟环境，叫`base` |
+| **conda create -n <虚拟环境名称> python=<python版本号> <包名1>==<版本号>** | 新建虚拟环境，-n表示设置当前虚拟环境的名称，<br>python表示设置当前虚拟环境的python版本，如果本地没有会自动下载安装<br>表示创建虚拟环境时同时安装一个或多个指定第三方包 |
+| conda create -n <新的虚拟环境名称> --clone <旧的虚拟环境名称> | 克隆虚拟环境                                                 |
+| **conda activate <虚拟环境名称>**                            | 进入/切换到指定名称的虚拟环境，如果不带任何参数，则默认回到全局虚拟环境`base`中 |
+| **conda deactivate**                                         | 退出当前虚拟环境                                             |
+| conda install -n <虚拟环境名称> <包名1>==<版本号>            | 在虚拟环境外部，给**指定虚拟环境**安装或更新一个或多个指定包<br>如果是最新的版本的包，conda install无法安装，则可以使用pip install安装 |
+| **conda install <包名1>==<版本号>**                          | 在虚拟环境内部，给**当前虚拟环境**安装或更新一个或多个指定包 |
+| conda install  <包名1>==<版本号> **-c conda-force**          | 在虚拟环境内部，指定下载服务器源给**当前虚拟环境**安装或更新一个或多个指定包，conda-force有时候会因为网络问题被拦截。 |
+| conda remove -n <虚拟环境名称> <包名1>==<版本号>             | 在虚拟环境外部，给**指定虚拟环境**卸载一个或多个指定包       |
+| **conda remove <包名1>==<版本号>**                           | 在虚拟环境内部，给**当前虚拟环境**卸载一个或多个指定包       |
+| **conda remove -n <虚拟环境名称> --all**                     | 删除指定虚拟环境，并卸载该环境中所有指定包                   |
+| **conda env export > environment.yaml**                      | 导出当前虚拟环境的Anaconda包信息到环境配置文件environment.yaml中 |
+| **conda env create -f environment.yaml**                     | 根据环境配置文件environment.yaml的包信息来创建新的虚拟环境   |
+| conda update --prefix <anaconda安装目录> anaconda            | 更新Anaconda的版本。<br>先回到base环境，再执行conda update，系统会自动提示完整并正确的命令<br>如果上述方法不行，只能卸载现有的conda，然后下载最新版本安装。 |
+
+```bash
+# 新建虚拟环境
+# -n <虚拟环境名称> 或者 --name <虚拟环境名称>
+#     表示设置当前虚拟环境的名称
+# python=<python版本号>
+#     表示设置当前虚拟环境的python版本，如果本地没有会自动下载安装
+
+# <包名>==<版本号>
+#     表示创建虚拟环境时同时安装一个或多个指定第三方包
+#     可指定版本号，如果不指定版本，则安装当前python环境能支持的最新版本的包
+#     注意:
+#         指定包的版本时，有可能会因为没有这个版本或当前python环境不支持当前版本而导致虚拟环境创建失败。
+#         所以，建议指定包版本时，尽量使用*号表示小版本，例如：django==1.*
+
+conda create -n <虚拟环境名称> python=<python版本号> <包名1>==<版本号> <包名2> ... <包名n>
+
+# 例如：
+conda create -n py27 python=2.7
+conda create -n py36 python=3.6  pymongo   # 表示安装pymongo模块的最新版本
+conda create -n pro1 python=3.8  flask celery   # 表示安装2个包
+conda create -n pro2 python=3.6  django==2.2.0 pymysql    # 表示安装django指定版本，pymysql的最新版本
+
+# 克隆虚拟环境
+conda create -n <新的虚拟环境名称> --clone <旧的虚拟环境名称>
+
+# 进入/切换到指定名称的虚拟环境，如果不带任何参数，则默认回到全局环境base中。
+conda activate <虚拟环境名称>
+
+# 退出当前虚拟环境
+conda deactivate
+
+# 在虚拟环境外部，给指定虚拟环境安装/或者更新一个或多个指定包
+conda install -n <虚拟环境名称> <包名1>==<版本号> <包名2> ... <包名n>
+# 也可以在进入虚拟环境以后，通过conda install <包名> 来完成安装工作
+conda install <包名1>==<版本号> <包名2> ... <包名n>
+
+#  在虚拟环境外部，给指定虚拟环境卸载一个或多个指定包
+conda remove -n <虚拟环境名称> <包名1>==<版本号> <包名2> ... <包名n>
+# 也可以在进入虚拟环境以后，通过conda remove <包名> 来完成卸载工作
+conda remove <包名1>==<版本号> <包名2> ... <包名n>
+
+# 删除指定虚拟环境
+conda remove -n <虚拟环境名称> --all
+
+# 导出当前虚拟环境的Anaconda包信息到环境配置文件environment.yaml中
+conda env export > environment.yaml 
+
+# 根据环境配置文件environment.yaml的包信息来创建新的虚拟环境
+conda env create -f environment.yaml
+
+# 更新Anaconda的版本，这里可以先执行conda update，系统会自动提示完整并正确的命令
+conda update --prefix <anaconda安装目录> anaconda
+```
+
+> 注意：
+>
+> 有了Anaconda以后，要养成一个习惯：新建一个项目，就给这个项目单独分配一个虚拟环境。
+
+
+
+### 创建并运行虚拟环境
+
+创建虚拟环境并在虚拟环境中下载安装django包
+
+```bash
+# 创建djdemo虚拟环境，务必要指定python解析器的版本
+conda create -n py310 python=3.10
+# 进入虚拟环境
+conda activate py310
+# 安装django基本模块
+pip install django==4.2.5 -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 生成一个具有基本目录结构的django项目，在python安装了django包以后，默认就提供了一个全局命令django-admin，可以让我们基于django-admin快速创建django项目
+django-admin startproject djdemo   # djdemo 就是项目目录名，建议采用与项目相关的名称，最好英文！！！
+```
+
+### 4.千问模型本地部署
 
 #### 1.代码下载
 
@@ -66,7 +208,103 @@ HuggingFace 是一个自然语言处理（NLP）领域的开源社区和平台�
 
 #### 2.环境安装
 
-### 3.使用ollama3部署本地大模型
+conda create -n qwen1 python == 3.10.1
+
+conda activate qwen1
+
+pip install -r requirements.txt
+
+#### 3.模型下载
+
+cd Qwen
+
+git clone https://www.modelscope.cn/qwen/Qwen-7B-Chat.git
+
+git clone https://www.modelscope.cn/qwen/Qwen-1_8B-Chat.git
+
+#### 4.本地模型推理
+
+安装 pytorch
+
+安装依赖包
+
+pip install -r requirements_web_demo.txt
+
+vim web_demo.py修改模型的路径
+
+GPU推理
+
+   python web_demo.py --server-name 0.0.0.0 -c  模型服务器路径
+
+启动模型
+
+~~~
+- 交互式Demo
+```
+cd Qwen
+python cli_demo.py -c Qwen-1_8B-Chat
+```
+
+- chat界面
+
+```
+# 启动服务
+python web_demo.py --cpu-only -c=Qwen-1_8B-Chat
+# 查看web界面
+http://127.0.0.1:8000/
+```
+
+- API
+```
+# 先安装依赖
+pip install fastapi sse_starlette uvicorn pydantic
+# 启动API服务
+python openai_api.py --cpu-only -c=Qwen-1_8B-Chat
+```
+~~~
+
+访问本地模型
+
+~~~python
+pip install openai
+
+# Example: reuse your existing OpenAI setup
+from openai import OpenAI
+
+# Point to the local server
+client = OpenAI(base_url="http://localhost:8000/v1", api_key="none")
+
+completion = client.chat.completions.create(
+  model="qwen:1.8b",
+  messages=[
+    {"role": "user", "content": "讲一个50字以内的笑话"}
+  ],
+  temperature=0.7,
+  top_p=0.95,
+)
+
+print(completion.choices[0].message)
+~~~
+
+使用langchain
+
+~~~
+from langchain_community.llms.openai import OpenAI
+from langchain_community.chat_models.openai import ChatOpenAI
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+
+
+# 创建一个ChatOpenAI集成对象，用于与OpenAI模型交互
+# 注意：API只支持流式输出
+llm = ChatOpenAI(base_url="http://localhost:8000/v1", api_key="none",streaming=True,
+    callbacks=[StreamingStdOutCallbackHandler()]  )
+ 
+llm.invoke("讲一个50字以内的笑话")
+~~~
+
+
+
+### 2.使用ollama3部署本地大模型
 
 Ollama 是一个开源项目，它允许用户在本地机器上运行大型语言模型。这个项目简化了在个人电脑或服务器上部署和运行像LLaMA这样的大型语言模型的过程。如果你想要使用 Ollama 部署本地的大模型
 
@@ -165,141 +403,6 @@ print(response.status_code)
 print(response.text)  #str
 ~~~
 
-Qwen部署
-
-~~~
-## 4、Qwen
-
-千问提供了模型部署和可以快速体验的demo。
-
-github地址：https://github.com/QwenLM/Qwen
-
-### 4.1 部署
-
-#### 4.1.1 下载Qwen
-
-下载Qwen，也可以下载Qwen2
-
-git clone https://github.com/QwenLM/Qwen.git
-
-#### 4.1.2 下载模型
-
-从魔搭社区下载：https://www.modelscope.cn
-
-```
-cd Qwen
-# 下载模型
-git clone https://www.modelscope.cn/qwen/Qwen-1_8B-Chat.git
-# 安装依赖
-pip install -r requirements.txt
-# 安装web依赖
-pip install -r requirements_web_demo.txt
-
-```
-~~~
-
-启动模型
-
-~~~
-
-
-- 交互式Demo
-```
-cd Qwen
-python cli_demo.py -c Qwen-1_8B-Chat
-```
-
-- chat界面
-
-```
-# 启动服务
-python web_demo.py --cpu-only -c=Qwen-1_8B-Chat
-# 查看web界面
-http://127.0.0.1:8000/
-```
-
-- API
-```
-# 先安装依赖
-pip install fastapi sse_starlette uvicorn pydantic
-# 启动API服务
-python openai_api.py --cpu-only -c=Qwen-1_8B-Chat
-```
-~~~
-
-访问本地模型
-
-~~~python
-pip install openai
-
-# Example: reuse your existing OpenAI setup
-from openai import OpenAI
-
-# Point to the local server
-client = OpenAI(base_url="http://localhost:8000/v1", api_key="none")
-
-completion = client.chat.completions.create(
-  model="qwen:1.8b",
-  messages=[
-    {"role": "user", "content": "讲一个50字以内的笑话"}
-  ],
-  temperature=0.7,
-  top_p=0.95,
-)
-
-print(completion.choices[0].message)
-~~~
-
-使用langchain
-
-~~~
-from langchain_community.llms.openai import OpenAI
-from langchain_community.chat_models.openai import ChatOpenAI
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-
-
-# 创建一个ChatOpenAI集成对象，用于与OpenAI模型交互
-# 注意：API只支持流式输出
-llm = ChatOpenAI(base_url="http://localhost:8000/v1", api_key="none",streaming=True,
-    callbacks=[StreamingStdOutCallbackHandler()]  )
- 
-llm.invoke("讲一个50字以内的笑话")
-~~~
-
-### vllm
-
-~~~
-vLLM 是来自 UC Berkeley 的 LMSYS 在 LLM 推理方面的最新工作（搞出 Vicuna 的那个 group），最大亮点是采用 Paged Attention 技术，结合 Continuous Batching，极大地优化了 realtime 场景下的 LLM serving 的 throughput 与内存使用。
-### 安装
-
-pip install vllm
-
-### 部署模型
-
-```
-CUDA_VISIBLE_DEVICES=0 python -m vllm.entrypoints.openai.api_server --model /mnt/workspace/chat1 --served-model-name qwen  --trust-remote-code
-```
-
-### 调用模型
-
-```
-# 查看所有模型
-curl http://localhost:8000/v1/models
-
-# 调用模型
-curl http://localhost:8000/v1/chat/completions \
-    -H "Content-Type: application/json" \
-    -d '{
-        "model": "qwen",
-        "messages": [
-            {"role": "user", "content": "你是谁?"}
-        ]
-    }'
-```
-~~~
-
-
-
 
 
 
@@ -309,37 +412,6 @@ curl http://localhost:8000/v1/chat/completions \
 ~~~
 GLM-4-9B 是智谱 AI 推出的最新一代预训练模型 GLM-4 系列中的开源版本。 在语义、数学、推理、代码和知识等多方面的数据集测评中， GLM-4-9B 及其人类偏好对齐的版本 GLM-4-9B-Chat 均表现出超越 Llama-3-8B 的卓越性能。除了能进行多轮对话，GLM-4-9B-Chat 还具备网页浏览、代码执行、自定义工具调用（Function Call）和长文本推理（支持最大 128K 上下文）等高级功能。本代模型增加了多语言支持，支持包括日语，韩语，德语在内的 26 种语言。我们还推出了支持 1M 上下文长度（约 200 万中文字符）的 GLM-4-9B-Chat-1M 模型和基于 GLM-4-9B 的多模态模型 GLM-4V-9B。GLM-4V-9B 具备 1120 * 1120 高分辨率下的中英双语多轮对话能力，在中英文综合能力、感知推理、文字识别、图表理解等多方面多模态评测中，GLM-4V-9B 表现出超越 GPT-4-turbo-2024-04-09、Gemini 1.0 Pro、Qwen-VL-Max 和 Claude 3 Opus 的卓越性能。
 GLM-4-9B 的基座版本，支持8K上下文长度
-~~~
-
-1.打开网址
-
-https://modelscope.cn/models/ZhipuAI/glm-4-9b/files
-
-![image-20240913170622975](img/image-20240913170622975.png)
-
-  2.阿里领取服务器
-
-~~~
-# 在线GPU环境
-
-## 阿里云PAI
-
-每天发送500份
-
-搜索中输入 PAI-DSW
-
-~~~
-
-3.点击开始使用
-
-~~~
-命令行下载
-请先通过如下命令安装ModelScope
-
-pip install modelscope
-下载完整模型repo
-modelscope download --model ZhipuAI/glm-4-9b
-
 ~~~
 
 

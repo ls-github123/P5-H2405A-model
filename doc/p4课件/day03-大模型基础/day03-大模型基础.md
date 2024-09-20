@@ -347,79 +347,76 @@ def sse_notifications(request):
 npm install echarts
 ~~~
 
-
-
-
-
 ~~~vue
 <template>
   <div>
-  <div id="main" style="width:500px;height:300px;"></div>
-  请输入问题<el-input v-model="mes"></el-input>
-  <el-button @click="submit">提交</el-button>
-  {{answer}}
-
+  <div id="main" style="width:600px;height:300px;"></div>
+ {{errormes}}
   </div>
 </template>
 
 <script lang="ts" setup>  
 import { ref,onMounted } from 'vue'  
-import http from "../http";  
+// import http from "../http";  
 import * as echarts from 'echarts';
+const xlist = ref(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+const ylist = ref([120, 200, 150, 80, 70, 110, 130])
+const errormes=ref('')
+const source=ref('')
 
-const mes = ref('')
-const answer = ref('')
-const source = ref('')
-const orderlist = ref([1001,1002])
-const countlist = ref([100,200])
-
-
-const initecharts=()=>{
+const initecharts = ()=>{
     var chartDom = document.getElementById('main');
-var myChart = echarts.init(chartDom);
-var option;
+    var myChart = echarts.init(chartDom);
+    var option;
 
-option = {
-  xAxis: {
-    type: 'category',
-    data:orderlist.value
-  },
-  yAxis: {
-    type: 'value'
-  },
-  series: [
-    {
-      data: countlist.value,
-      type: 'line'
-    }
-  ]
-};
+    option = {
+    xAxis: {
+        type: 'category',
+        data: xlist.value
+    },
+    yAxis: {
+        type: 'value'
+    },
+    series: [
+        {
+        data: ylist.value,
+        type: 'bar'
+        }
+    ]
+    };
 
-option && myChart.setOption(option);
+    option && myChart.setOption(option);
 }
 
-onMounted(() => {  
-  initecharts() 
-}) 
-
-const submit=()=>{
-    source.value = new EventSource("http://localhost:8000/sse/?ask="+mes.value);
+const getmes=()=>{
+    //建立sse连接
+    //获取数据,更新xlist和ylist和errormes
+    // initecharts()
+    source.value = new EventSource("http://localhost:8000/echartssse/");
     //接收消息
     source.value.onmessage = (event=> {
-        answer.value = answer.value + event.data
-        var totallist = JSON.parse(event.data)
-       
-        orderlist.value = totallist.orderlist
-        countlist.value = totallist.countlist
-        initecharts() 
+        var edata = JSON.parse(event.data)
+        console.log(edata)
+        xlist.value = edata.orderlist
+        ylist.value = edata.numberlist
+        errormes.value = edata.errormes
+        
+         initecharts()
     });
+   
 
-    source.value.onerror = (error=> {
-        console.error('EventSource failed:', error);
-        source.value.close();
-        source.value = null;
-    });
+    // source.value.onerror = (error=> {
+    //     console.error('EventSource failed:', error);
+    //     source.value.close();
+    //     source.value = null;
+    // });
 }
+
+onMounted(()=>{
+    getmes()
+    
+})
+
 </script>
 
 <style>
@@ -430,18 +427,18 @@ const submit=()=>{
 
 
 ~~~python
-def event_stream():
-        while True:
-            orders = Torders.objects.all()
-            # list = [{"id":i.id,'orderno':i.orderno} for i in orders]
-            list = json.dumps({"orderlist":[i.orderno for i in orders],"countlist":[100,200,300]})
-            # 发送数据给客户端
-            yield f"data: {list}\n\n"
-    
-            time.sleep(1)  # 每秒发送一次
+def get_data():
+    while True:
+        orderlist = ['1001','1002','1003']
+        numberlist = [10,30,40]
+        errormes = "1001温度过高"
+        list = json.dumps({"orderlist":orderlist,"numberlist":numberlist,'errormes':errormes})
+        yield f"data: {list}\n\n"
+        time.sleep(3)
+        
 @require_GET
-def sse_views(request):
-    response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+def echartssse(request):
+    response = StreamingHttpResponse(get_data(), content_type='text/event-stream')
     response['Cache-Control'] = 'no-cache'
     return response
 ~~~
@@ -1126,6 +1123,17 @@ if cates.name == '':
 问题历史表
 
 id  问题  答案   userid   分类id
+
+数据库设计 
+
+~~~
+分类表
+id   name  addtime
+问题表
+id  askmes  answer  cateid   addtime
+~~~
+
+
 
 ​     
 

@@ -26,5 +26,6 @@ urlpatterns = [
     path('toolsView/',ToolsView.as_view()),
     path('toolsCall/',ToolsCall.as_view()),
     path('sse/',sse_views),
-    path('echartssse/',echartssse)
+    path('echartssse/',echartssse),
+    path('randromCount/',RandromCount.as_view())
 ]
