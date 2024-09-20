@@ -1,3 +1,5 @@
+
+
 # 第三单元  大模型基础
 
 ## **一、昨日知识点回顾**
@@ -201,7 +203,7 @@ Vue和Django的结合通常用于前后端分离的开发模式，其中Vue负�
 
 以下是Vue和Django实现流式响应的步骤：
 
-#### 3.2.1 实现流程 
+#### 3.2.2 实现流程 
 
 1. 设置视图函数
 
@@ -306,6 +308,146 @@ def sse_notifications(request):
 
 <img src="images/1.png">
 
+#### 3.2.3 可视化项目
+
+![image-20240920081752415](images/image-20240920081752415.png)
+
+需求分析
+
+1.1号大鹏 草药   2号大鹏  鲜花    3号大鹏  菜
+
+2.新建一张表  有三个字段
+
+编号  最小值   最大值
+
+1001   20         30
+
+1002   50         100
+
+1003    3            5
+
+3.获取大鹏dde的温度，查询数据库做对比，如果异常返回
+
+代码实现
+
+~~~
+1.vue页面，echarts显示各大鹏温度，用红色字体显示几号异常
+2.写一个接口  传入编号，随机生成温度 0-100
+3.写一个接口 ，获取大鹏温度。用requests向2号接口发起请求。
+4.查询数据库，判断温度是否合法，返回，采用sse
+~~~
+
+#### echats
+
+官网地址：https://echarts.apache.org/zh/index.html
+
+安装
+
+~~~
+npm install echarts
+~~~
+
+
+
+
+
+~~~vue
+<template>
+  <div>
+  <div id="main" style="width:500px;height:300px;"></div>
+  请输入问题<el-input v-model="mes"></el-input>
+  <el-button @click="submit">提交</el-button>
+  {{answer}}
+
+  </div>
+</template>
+
+<script lang="ts" setup>  
+import { ref,onMounted } from 'vue'  
+import http from "../http";  
+import * as echarts from 'echarts';
+
+const mes = ref('')
+const answer = ref('')
+const source = ref('')
+const orderlist = ref([1001,1002])
+const countlist = ref([100,200])
+
+
+const initecharts=()=>{
+    var chartDom = document.getElementById('main');
+var myChart = echarts.init(chartDom);
+var option;
+
+option = {
+  xAxis: {
+    type: 'category',
+    data:orderlist.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: [
+    {
+      data: countlist.value,
+      type: 'line'
+    }
+  ]
+};
+
+option && myChart.setOption(option);
+}
+
+onMounted(() => {  
+  initecharts() 
+}) 
+
+const submit=()=>{
+    source.value = new EventSource("http://localhost:8000/sse/?ask="+mes.value);
+    //接收消息
+    source.value.onmessage = (event=> {
+        answer.value = answer.value + event.data
+        var totallist = JSON.parse(event.data)
+       
+        orderlist.value = totallist.orderlist
+        countlist.value = totallist.countlist
+        initecharts() 
+    });
+
+    source.value.onerror = (error=> {
+        console.error('EventSource failed:', error);
+        source.value.close();
+        source.value = null;
+    });
+}
+</script>
+
+<style>
+
+</style>
+~~~
+
+
+
+~~~python
+def event_stream():
+        while True:
+            orders = Torders.objects.all()
+            # list = [{"id":i.id,'orderno':i.orderno} for i in orders]
+            list = json.dumps({"orderlist":[i.orderno for i in orders],"countlist":[100,200,300]})
+            # 发送数据给客户端
+            yield f"data: {list}\n\n"
+    
+            time.sleep(1)  # 每秒发送一次
+@require_GET
+def sse_views(request):
+    response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    return response
+~~~
+
+
+
 ### 3.3 NLP
 
 #### 3.3.1 NLP 简介
@@ -370,74 +512,6 @@ RNN 及其变体广泛应用于以下领域：
 - **时间序列预测**：如股票价格预测、天气预报等。
 - **图像字幕生成**：给定一张图片生成描述性的文字。
 - 
-
-自然语言处理（NLP Natural Language Processing）是一种专业分析人类语言的人工智能。就是在机器语⾔和⼈类语言之间沟通的桥梁，以实现人机交流的目的。
-
-\- 2个核⼼心任务：
-
-​    \- 自然语言理解 - NLU （Natural Language Understanding）
-
-​    \- 自然语言生成 - NLG （Natural Language Generation）
-
-#### 3.3.2 NLU介绍
-
-通俗的讲，NLU就是机器需要理解人的意思。比如下面的例子：
-
-\- 标点歧义：下雨天留客天天就我不留
-
-\- 结构歧义：这是许多朋友送来的礼物
-
-\- 语义歧义：我喜欢苹果；来上课的多半是男生；他谁都认识
-
-\- 相同意思：我想听歌；来点音乐；放首歌
-
-\- 还有对音响说：太吵了；降低音量
-
-NLU的难点
-
-\- 难点1:语言的多样性；自然语言有很多不同的表达，组合方式非常灵活，不同的组合可以表达多种含义，总能找到很多例外的情况。
-
-\- 难点2:语言的歧义性；如果不联系上下文，缺少环境的约束，语言有很大的歧义性。
-
-\- 难点3:语言的鲁棒性；自然语言在输入的过程中，尤其是通过语音识别获得的文本，会存在多字、少字、错字、噪音等问题。
-
-\- 难点4:语言的知识依赖；语言是对世界的符号化描述，语言天然连接着世界知识。
-
-\- 难点5:语言的上下文；上下文的概念包括很多种：对话的上下文、设备的上下文、应用的上下文、用户画像。
-
-NLU的应用
-
-\- 机器翻译（有道、百度翻译等）
-
-\- 机器客服（各种app里面的机器客户）
-
-\- 智能音箱（小爱音箱、天猫精灵等）
-
-#### 3.3.3 NLG介绍
-
-通俗的讲，NLG机器根据信息生成文本内容，该信息可以是语音、视频、图片、文字等等。
-
-NLG有2种方式：
-
-\- text - to - text:文本到语言的生成
-
-\- data - to - text :数据到语言的生成
-
-NLG的3个LEVEL
-
-\- 数据合并：自然语言处理的简化形式，这将允许将数据转换为文本（通过类似 Excel的函数）。
-
-\- 模板化的NLG:这种形式的NLG使用模板驱动模式来显示输出。。数据动态地保持更改，并由预定义的业务规则集（如if/else循环语句）生成。
-
-\- 高级NLG:这种形式的自然语言生成就像人类一样。它理解意图，添加智能，考虑上下 文，并将结果呈现在用户可以轻松阅读和理解的富有洞察力的叙述中。
-
-NLG的典型应用
-
-\- 自动写作（自动写新闻，自动写论文等）
-
-\- 聊天机器人 （各种手机开发的内置聊天机器人，智能音响，商场导航机器人等）
-
-\- BI的解读和报告生成 （各行各业解读报告生成比如体检报告）
 
 **NLP的发展历程**
 

@@ -56,6 +56,16 @@ HuggingFace 是一个自然语言处理（NLP）领域的开源社区和平台�
 5. 智能体开发框架： ModelScope还推出了ModelScope-Agent开发框架，如MSAgent-Qwen-7B，允许用户打造属于自己的智能体。这个框架提供了丰富的环境配置选项，支持单卡运行，并有一定的显存要求。
 ~~~
 
+### 3.千问模型本地部署
+
+#### 1.代码下载
+
+项目地址：https://github.com/QwenLM/Qwen/
+
+下载到本地: git clone https://github.com/QwenLM/Qwen.git
+
+#### 2.环境安装
+
 ### 3.使用ollama3部署本地大模型
 
 Ollama 是一个开源项目，它允许用户在本地机器上运行大型语言模型。这个项目简化了在个人电脑或服务器上部署和运行像LLaMA这样的大型语言模型的过程。如果你想要使用 Ollama 部署本地的大模型

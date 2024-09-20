@@ -22,7 +22,9 @@ urlpatterns = [
     path("test/", Test.as_view()),
     path('ask/',Ask.as_view()),
     path('streamask/',StreamAsk.as_view()),
-    path('sse/',sse_view),
+    # path('sse/',sse_view),
     path('toolsView/',ToolsView.as_view()),
-    path('toolsCall/',ToolsCall.as_view())
+    path('toolsCall/',ToolsCall.as_view()),
+    path('sse/',sse_views),
+    path('echartssse/',echartssse)
 ]

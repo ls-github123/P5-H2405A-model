@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HelloWorld from '../views/HelloWorld.vue'
 import tsse from '../views/tsse.vue'
+import echartstest from '../views/echartstest.vue'
 
 
 const routes = [{
@@ -11,7 +12,11 @@ const routes = [{
         path: '/tsse',
         name: 'tsse',
         component: tsse
-    }
+    }, {
+        path: '/etest',
+        name: 'echartstest',
+        component: echartstest
+    },
     // 其他路由...  
 ]
 

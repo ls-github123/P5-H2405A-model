@@ -767,6 +767,116 @@ https://www.juhe.cn/docs/api/id/73
 
 3.调用模型处理设置tools
 
+### 代码实现
+
+~~~python
+#获取天气信息接口
+def get_current_weather(city):
+    res = requests.get('http://apis.juhe.cn/simpleWeather/query',params={"city":city,"key":"545cf0bec2b0682dcc2c8f68325cf6c4"},headers={"Content-Type":"application/x-www-form-urlencoded"})
+    data = json.loads(res.text)
+    return data['result']['realtime']['temperature']
+#查询订单
+def getorders(orderno):
+    orders = Torders.objects.filter(orderno=orderno).first()
+    return {"orderno":orderno,'desc':orders.descip}
+
+
+# 定义工具列表，模型在选择使用哪个工具时会参考工具的name和description
+tools = [
+    # 工具2 获取指定城市的天气
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "当你想查询指定城市的天气时非常有用。",
+            "parameters": {  # 查询天气时需要提供位置，因此参数设置为location
+                        "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "城市或县区，比如北京、杭州、余杭区等。"
+                    }
+                }
+            },
+            "required": [
+                "location"
+            ]
+        }
+    },
+    # 工具2 获取订单信息
+    {
+        "type": "function",
+        "function": {
+            "name": "getorders",
+            "description": "当你想查询订单时非常有用。",
+            "parameters": {  # 查询天气时需要提供位置，因此参数设置为location
+                        "type": "object",
+                "properties": {
+                    "orderno": {
+                        "type": "string",
+                        "description": "获取订单号"
+                    }
+                }
+            },
+            "required": [
+                "orderno"
+            ]
+        }
+    }
+]
+
+# 封装模型响应函数
+def get_response(messages):
+    response = Generation.call(
+        model='qwen-max',
+        messages=messages,
+        tools=tools,
+        seed=random.randint(1, 10000),  # 设置随机数种子seed，如果没有设置，则随机数种子默认为1234
+        result_format='message'  # 将输出设置为message形式
+    )
+    return response
+
+class ToolsCall(APIView):
+    def get(self,request):
+        mes = request.GET.get('mes')
+        messages = [
+            {
+                "content": mes,  # 提问示例："现在几点了？" "一个小时后几点" "北京天气如何？"
+                "role": "user"
+            }
+        ]
+    
+        # 模型的第一轮调用
+        first_response = get_response(messages)
+        assistant_output = first_response.output.choices[0].message
+        print(f"\n大模型第一轮输出信息：{first_response}\n")
+        messages.append(assistant_output)
+        if 'tool_calls' not in assistant_output:  # 如果模型判断无需调用工具，则将assistant的回复直接打印出来，无需进行模型的第二轮调用
+            print(f"最终答案：{assistant_output.content}")
+            return Response({"code":200,'mes':assistant_output.content})
+        # 如果模型选择的工具是get_current_weather
+        elif assistant_output.tool_calls[0]['function']['name'] == 'get_current_weather':
+            tool_info = {"name": "get_current_weather", "role":"tool"}
+            location = json.loads(assistant_output.tool_calls[0]['function']['arguments'])['location']
+            tool_info['content'] = get_current_weather(location)
+        # 如果模型选择的工具是get_current_time
+        elif assistant_output.tool_calls[0]['function']['name'] == 'getorders':
+            tool_info = {"name": "getorders", "role":"tool"}
+            orderno = json.loads(assistant_output.tool_calls[0]['function']['arguments'])['orderno']
+            tool_info['content'] = getorders(orderno)
+        print(f"工具输出信息：{tool_info['content']}\n")
+        messages.append(tool_info)
+
+        # 模型的第二轮调用，对工具的输出进行总结
+        second_response = get_response(messages)
+        print(f"大模型第二轮输出信息：{second_response}\n")
+        print(f"最终答案：{second_response.output.choices[0].message['content']}")
+        return Response({"code":200,'mes':second_response.output.choices[0].message['content']})
+
+~~~
+
+
+
 
 
 

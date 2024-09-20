@@ -1,24 +1,63 @@
 <template>
   <div>
+  <div id="main" style="width:500px;height:300px;"></div>
   请输入问题<el-input v-model="mes"></el-input>
   <el-button @click="submit">提交</el-button>
   {{answer}}
+
   </div>
 </template>
 
 <script lang="ts" setup>  
-import { ref } from 'vue'  
+import { ref,onMounted } from 'vue'  
 import http from "../http";  
+import * as echarts from 'echarts';
 
 const mes = ref('')
 const answer = ref('')
 const source = ref('')
+const orderlist = ref([1001,1002])
+const countlist = ref([100,200])
+
+
+const initecharts=()=>{
+    var chartDom = document.getElementById('main');
+var myChart = echarts.init(chartDom);
+var option;
+
+option = {
+  xAxis: {
+    type: 'category',
+    data:orderlist.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: [
+    {
+      data: countlist.value,
+      type: 'line'
+    }
+  ]
+};
+
+option && myChart.setOption(option);
+}
+
+onMounted(() => {  
+  initecharts() 
+}) 
 
 const submit=()=>{
     source.value = new EventSource("http://localhost:8000/sse/?ask="+mes.value);
     //接收消息
     source.value.onmessage = (event=> {
         answer.value = answer.value + event.data
+        var totallist = JSON.parse(event.data)
+       
+        orderlist.value = totallist.orderlist
+        countlist.value = totallist.countlist
+        initecharts() 
     });
 
     source.value.onerror = (error=> {

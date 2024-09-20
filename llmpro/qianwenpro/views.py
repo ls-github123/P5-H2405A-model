@@ -212,6 +212,7 @@ def generate_sse(responses):
                 yield data.encode('utf-8')  # 必须编码为字节串
             else:
                 return "no mes"
+    
      
 @require_GET
 def sse_view(request):
@@ -231,7 +232,7 @@ def sse_view(request):
     )
     response["Cache-Control"] = "no-cache"
     return response
-
+   
 
 #获取天气信息接口
 def get_current_weather(city):
@@ -335,3 +336,37 @@ class ToolsCall(APIView):
         print(f"大模型第二轮输出信息：{second_response}\n")
         print(f"最终答案：{second_response.output.choices[0].message['content']}")
         return Response({"code":200,'mes':second_response.output.choices[0].message['content']})
+
+def event_stream():
+        while True:
+            orders = Torders.objects.all()
+            # list = [{"id":i.id,'orderno':i.orderno} for i in orders]
+            list = json.dumps({"orderlist":[i.orderno for i in orders],"countlist":[100,200,300]})
+            # 发送数据给客户端
+            yield f"data: {list}\n\n"
+    
+            time.sleep(1)  # 每秒发送一次
+@require_GET
+def sse_views(request):
+    response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    return response
+
+
+
+def get_data():
+    while True:
+        orderlist = ['1001','1002','1003']
+        numberlist = [10,30,40]
+        errormes = "1001温度过高"
+        list = json.dumps({"orderlist":orderlist,"numberlist":numberlist,'errormes':errormes})
+        yield f"data: {list}\n\n"
+        time.sleep(3)
+        
+@require_GET
+def echartssse(request):
+    response = StreamingHttpResponse(get_data(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    return response
+
+
