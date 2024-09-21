@@ -453,7 +453,6 @@ def getmesbymodels(messages):
     )
     mes=''
     if response.status_code == HTTPStatus.OK:
-        print(response)
         mes=response.output.choices[0].message.content
     return mes
         
@@ -467,17 +466,16 @@ class QuestionsView(APIView):
         #调用模型获取答案
         messages = [{'role': 'system', 'content': 'You are a helpful assistant.'},
                 {'role': 'user', 'content': ask}]
-        answer = '34243'
+        answer = getmesbymodels(messages)
         #判断是否需要更新分类名称
         cates = Cates.objects.filter(id=cateid).first()
         cname = ''
         if not cates.name:
             #如果需要调用模型从ask中获取20个字符
-            messages = [{'role': 'system', 'content': '你是一个非常厉害的文本规划师，请帮我对内容进行处理,返回前3个字'},
-                {'role': 'user', 'content': ask}]
-            cname = getmesbymodels(messages)
-            print(cname)
-            # cates.name = cname
+            # mess = [{'role': 'system', 'content': '你是一个非常厉害的文本规划师，从角色为user的content中截取前3个字返回'},
+            #     {'role': 'user', 'content': ask}]
+            cname = ask[:10]
+            cates.name = cname
             cates.save()
         #写入问答表
         Questions.objects.create(ask=ask,answer=answer,cid_id=cateid)
