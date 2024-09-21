@@ -150,7 +150,7 @@ const submitMessage=()=> {
             // messages.value.push({"qustion":textarea.value,'answer':res.data.mes})
             if(res.data.catename){
                 catename.value= res.data.catename
-                conversations.value.push({"id":cateid.value,'name':res.data.catename})
+                conversations.value.unshift({"id":cateid.value,'name':res.data.catename})
             }
         }
     })
