@@ -396,19 +396,68 @@ def echartssse(request):
     response = StreamingHttpResponse(get_data(), content_type='text/event-stream')
     response['Cache-Control'] = 'no-cache'
     return response
-
+from .ser import *
+import dashscope
 class TestInterface(APIView):
     def get(self,request):
-        res = requests.post("http://localhost:8000/cates/")
-        print(res.text)
-        return Response({"code":222})
+        # messages = [{'role': 'system', 'content': '你是一个非常厉害的文本规划师，请帮我对内容进行处理,返回前20个字'},
+        #         {'role': 'user', 'content': '春天，四季之首，万物复苏的季节。温暖的阳光驱散了冬日的寒冷，大地披上了嫩绿的新装。花儿竞相开放，桃花、樱花、郁金香争奇斗艳，散发出阵阵芳香。小鸟在枝头欢快地歌唱，仿佛在庆祝新生的到来。人们脱去厚重的冬装，走出家门，享受着温暖的阳光和清新的空气。春天不仅带来了生机与活力，也带来了希望与梦想，让人心情愉悦，充满力量'}]
+
+        # response = dashscope.Generation.call(
+        #     dashscope.Generation.Models.qwen_turbo,
+        #     messages=messages,
+        #     result_format='message',  # 将返回结果格式设置为 message
+        # )
+        # if response.status_code == HTTPStatus.OK:
+        #     print(response.output.choices[0].message.content)
+        # else:
+        #     print('Request id: %s, Status code: %s, error code: %s, error message: %s' % (
+        #         response.request_id, response.status_code,
+        #         response.code, response.message
+        #     ))
+        
+        # res = requests.post("http://localhost:8000/cates/")
+        # print(res.text)
+        # ask = request.GET.get('ask')
+        #exclude
+        # res = Questions.objects.filter(ask__startswith=ask).all()
+        # ser = QuestionsSer(res,many=True)
+        return Response({"code":222,'data':'data'})
 #添加分类接口
 class CatesView(APIView):
     def post(self,request):
         # code = "h" +str(random.randint(100,999))
-        cates = Cates.objects.create()
+        #查询name为空的
+        cates = Cates.objects.filter(name__isnull=True).first()
+        if not cates:
+            cates = Cates.objects.create()
         return Response({"code":200,'cateid':cates.id})
     
+    def get(self,request):
+        #获取搜索的名称
+        sname = request.GET.get('sname')
+        if sname:
+            cates = Cates.objects.exclude(name__isnull=True).filter(name__startswith=sname).order_by('-add_time').all()[0:10]
+        else:
+            cates = Cates.objects.exclude(name__isnull=True).order_by('-add_time').all()[0:10]
+        ser = CatesSer(cates,many=True)
+        return Response({"code":200,'clist':ser.data})
+    
+#把调用模型回答封装成方法
+def getmesbymodels(messages):
+    
+    response = dashscope.Generation.call(
+        dashscope.Generation.Models.qwen_turbo,
+        messages=messages,
+        result_format='message',  # 将返回结果格式设置为 message
+    )
+    mes=''
+    if response.status_code == HTTPStatus.OK:
+        print(response)
+        mes=response.output.choices[0].message.content
+    return mes
+        
+from .ser import *
 #添加消息接口
 class QuestionsView(APIView):
     def post(self,request):
@@ -416,16 +465,30 @@ class QuestionsView(APIView):
         ask = request.data['ask']
         cateid = request.data['cateid']
         #调用模型获取答案
-        answer = "34234234"
+        messages = [{'role': 'system', 'content': 'You are a helpful assistant.'},
+                {'role': 'user', 'content': ask}]
+        answer = '34243'
         #判断是否需要更新分类名称
         cates = Cates.objects.filter(id=cateid).first()
         cname = ''
         if not cates.name:
             #如果需要调用模型从ask中获取20个字符
-            cname = '234234'
-            cates.name = ask
+            messages = [{'role': 'system', 'content': '你是一个非常厉害的文本规划师，请帮我对内容进行处理,返回前3个字'},
+                {'role': 'user', 'content': ask}]
+            cname = getmesbymodels(messages)
+            print(cname)
+            # cates.name = cname
             cates.save()
         #写入问答表
         Questions.objects.create(ask=ask,answer=answer,cid_id=cateid)
         
         return Response({"code":200,'catename':cname,'answer':answer})
+    def get(self,request):
+        #获取参数cateid
+        cid = request.GET.get('cateid')
+        #获取此分类下所有的问题
+        ques = Questions.objects.filter(cid_id=cid).all()
+        #调用序列化器处理
+        ser = QuestionsSer(ques,many=True)
+        #返回
+        return Response({"code":200,'qlist':ser.data})

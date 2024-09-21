@@ -1135,6 +1135,15 @@ DashScopeEmbeddings 是指使用阿里云DashScope平台提供的嵌入（Embedd
   <tr><td>响应结果</td><td>{"code":200,"answer":"今天8号","catename":"今天几号"}  code 200成功  1001用户不存在</td></tr>
 </table>
 
+1.4 获取指定分类下的对话
+
+<table>
+  <tr><td>请求地址</td><td>questions</td></tr>
+  <tr><td>请求方式</td><td>get</td></tr>
+  <tr><td>传入参数</td><td>{"cateid":1}</td></tr>
+  <tr><td>响应结果</td><td>{"code":200,"qlist":[{'ask':222,'answer':'22'},{'ask':222,'answer':'22'}]}  code 200成功  1001用户不存在</td></tr>
+</table>
+
 
 
 #### 3.7.1需求如下：
