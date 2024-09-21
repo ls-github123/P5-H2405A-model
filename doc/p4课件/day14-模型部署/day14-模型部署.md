@@ -1,5 +1,3 @@
-
-
 # 第十四单元  模型部署
 
 ## **一、昨日知识点回顾**
@@ -98,6 +96,92 @@ conda是为了解决传统的虚拟环境问题而出现的虚拟环境管理工
 其中，anaconda是conda的完整版本，内置了将近300个关于服务端开发，人工智能，数据分析，爬虫，测试，运维等常用第三方模块。而miniconda则是conda的简单版本，内置了将近30个常用第三方模块。所以学习的时候，建议在本地安装anaconda，在公司开发或项目部署时使用miniconda。
 
 anaconda下载地址：https://repo.anaconda.com/archive/
+
+wget https://repo.anaconda.com/archive/Anaconda3-2024.06-1-Linux-x86_64.sh
+
+### 安装Anaconda
+
+1. **校验安装文件**（可选）：为了确保下载的文件没有损坏，你可以使用sha256sum来校验文件的完整性。将`Anaconda3-2023.07-1-Linux-x86_64.sh`替换为你实际下载的文件名。
+
+   bash深色版本
+
+   ```
+   sha256sum Anaconda3-2024.06-1-Linux-x86_64.sh
+   ```
+
+   比对输出的哈希值与Anaconda官网提供的哈希值是否一致。
+
+2. **运行安装程序**：
+
+   - 赋予.sh文件执行权限：
+
+     bash
+
+     ```
+     chmod +x Anaconda3-2024.06-1-Linux-x86_64.sh
+     ```
+
+   - 运行安装程序：
+
+     
+
+     ```
+     ./Anaconda3-2024.06-1-Linux-x86_64.sh
+     ```
+
+   - 按照屏幕上的提示进行操作。这包括阅读并接受许可协议，选择安装位置等。
+
+3. **初始化Anaconda**：
+
+   - 在安装过程中，你会被询问是否要初始化Anaconda。如果选择了“yes”，则Anaconda会自动配置你的.bashrc文件，以便每次打开终端时都能使用conda。
+
+   - 如果你错过了这个选项，或者想稍后手动初始化，可以编辑你的.bashrc文件，添加以下行：
+
+     bash深色版本
+
+     ```
+     export PATH="/root/anaconda3/anaconda3/bin:$PATH"
+     ```
+
+   - 使更改生效：
+
+     bash深色版本
+
+     ```
+     source ~/.bashrc
+     ```
+
+### 验证安装
+
+cd /root/anaconda3/bin/
+
+1. **检查conda版本**：
+
+   bash深色版本
+
+   ```
+   ./conda --version
+   ```
+
+   如果安装成功，你应该能看到conda的版本号。
+
+2. **创建一个新的环境**（可选）：
+
+   bash深色版本
+
+   ```
+   ./conda create --name myenv
+   ```
+
+   这将创建一个名为myenv的新环境。你可以根据需要安装不同的包到这个环境中。
+
+3. **激活环境**：
+
+   bash深色版本
+
+   ```
+   ./conda activate myenv
+   ```
 
 miniconda下载地址：https://repo.anaconda.com/miniconda/
 
@@ -234,7 +318,7 @@ vim web_demo.py修改模型的路径
 
 GPU推理
 
-   python web_demo.py --server-name 0.0.0.0 -c  模型服务器路径
+   python web_demo.py --server-name 0.0.0.0 -c  Qwen-7B-Chat
 
 启动模型
 
@@ -311,8 +395,6 @@ Ollama 是一个开源项目，它允许用户在本地机器上运行大型语�
 \- 由于学生电脑系统不统一，有的是windows，有的是mac,还有的是Ubautu
 
 \- 这几个系统中，Ubautu遇到的问题比较少，windows可能遇到的问题最多
-
-
 
 下载对应系统的版本
 
@@ -402,10 +484,6 @@ response = requests.post(url, json=json_data)
 print(response.status_code)  
 print(response.text)  #str
 ~~~
-
-
-
-
 
 ### 4.GLM-4-9B介绍
 

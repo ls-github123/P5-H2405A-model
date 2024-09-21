@@ -178,22 +178,6 @@ ret = tongyi.invoke(prompt)
 print(ret)
 ~~~
 
-**格式化输出**
-
-~~~python
-from langchain.schema import BaseOutputParser
-#自定义class，继承了BaseOutputParser
-class CommaSeparatedListOutputParser(BaseOutputParser):
-    """Parse the output of an LLM call to a comma-separated list."""
-
-
-    def parse(self, text: str):
-        """Parse the output of an LLM call."""
-        return text.strip().split(", ")
-
-CommaSeparatedListOutputParser().parse("hi, bye")
-~~~
-
 
 
 #### 1.2.3 ChatPromptTemplate
@@ -238,33 +222,29 @@ ChatPromptTemplate是一种用于帮助人们更好地进行对话和交流的�
 #### 1.2.4 ChatPromptTemplate案例
 
 ~~~python
-
-# 导入通义大模型
-from langchain_community.llms import Tongyi
-# 导入模板类
 from langchain.prompts import ChatPromptTemplate
+from langchain.prompts import HumanMessagePromptTemplate, AIMessagePromptTemplate
 
-from langchain.schema import SystemMessage, HumanMessage, AIMessage
+# 定义消息模板
+human_template = "我喜欢{season}，帮我写关于这方面的文章？"
+human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
 
-sy = SystemMessage(content="你是一个起名大师. 你的名字叫宋大师.")
-hu = HumanMessage(content="我家是宝，请起3个好养的名字？")
+# 可以添加 AI 的回复模板，这里只是一个简单的示例，所以暂时省略
+ai_template = "你是一个作家，根据用户要求写文章？"
+ai_message_prompt = AIMessagePromptTemplate.from_template(ai_template)
 
-# 定义模板
-# message = [   
-#            ("system","假设你是起名字的大师，"),
-#         ("human", "我家是{sex}宝，姓{firstName}，请起3个好养的名字？"),
-# ]
+# 创建 ChatPromptTemplate
+chat_prompt = ChatPromptTemplate.from_messages([human_message_prompt,ai_message_prompt])
 
-message = [sy,hu]
+# 使用模板生成具体的 prompt
+formatted_prompt = chat_prompt.format_prompt(season="秋天").to_messages()
 
-# 实例化模板类
-chartmp =  ChatPromptTemplate.from_messages(message);
-prompt = chartmp.format_messages(sex="男",firstName="李")
-print(prompt)
-
+# # 输出生成的消息
+# for message in formatted_prompt:
+#     print(message.content)
 # 实例化通义大模型
 tongyi = Tongyi()
-ret = tongyi.invoke(prompt)
+ret = tongyi.invoke(formatted_prompt)
 print(ret)
 
 ~~~
@@ -308,7 +288,7 @@ print(ret)
 
 #### 1.4.1介绍
 
-在LangChain中，`StringPromptTemplate`（尽管在提供的参考文章中并未直接提及这个名字，但我们可以基于上下文和一般性的理解来讨论）可能是一个用于生成字符串形式Prompt的模板类。以下是对`StringPromptTemplate`（或类似概念）在LangChain中的可能用途和特性的描述：
+`StringPromptTemplate` 是 LangChain 中用于创建简单字符串模板的工具。它可以用来生成包含动态变量的字符串，这些变量在运行时会被具体的值替换。在LangChain中的可能用途和特性的描述：
 
 1. 定义与用途
 
@@ -349,7 +329,7 @@ class CustmPrompt(StringPromptTemplate):
         return prompt
     
 pp = CustmPrompt(input_variables=["function_name","function_type"])
-prop = pp.format(function_name=HelloWorld,function_type="int")
+prop = pp.format(function_name=HelloWorld,function_type="str")
     
 
 tongyi = Tongyi()
@@ -422,6 +402,7 @@ print(promt)
 # 管道模板
 from langchain.prompts.pipeline import PipelinePromptTemplate
 from langchain.prompts.prompt import PromptTemplate
+from langchain_community.llms import Tongyi
 
 
 # Final Prompt由一系列变量构成
@@ -457,7 +438,7 @@ ret1 = pipeline_prompt.format(
 2.你可以使用石头剪刀布接龙。
 3.你说的必须是“剪刀”，不能是一般的词语""", 
 limit="只进行石头剪刀布游戏，拒绝回答其他话题")
-print(ret1)
+
 
 
 ret2 = pipeline_prompt.format(
@@ -468,8 +449,26 @@ ret2 = pipeline_prompt.format(
 3.你说的必须是“成语”，不能是一般的词语
 4.当用户或你无法找到下一个成语时，此游戏结束。用户可以输入一个新的成语，重新开始接龙""", 
 limit="只进行成语接龙游戏，拒绝回答其他话题")
-print(ret2)
 
+
+
+# 1导入prompt的类
+from langchain.prompts import PromptTemplate
+# 导入通义大模型
+from langchain_community.llms import Tongyi
+# 定义一个模板
+pp = "游戏规则为{ret},用户输入{input}"
+# 实例化模板类
+promptTemplate = PromptTemplate.from_template(pp)
+
+# 生成prompt
+prompt = promptTemplate.format(ret=ret2,input="爱莫能助")
+print(prompt)
+
+# 实例化通义大模型
+tongyi = Tongyi()
+ret = tongyi.invoke(prompt)
+print(ret)
 ~~~
 
 #### **1.6.2.使用文件来管理提示词模板**
@@ -481,6 +480,26 @@ print(ret2)
 \- 便于存储
 
 \- 支持常见格式(json/yaml/txt)
+
+yaml文件
+
+~~~
+_type: prompt
+input_variables:
+    ["name","what"]
+template:
+    给我讲一个关于{name}的{what}故事
+~~~
+
+json文件内容
+
+~~~
+{
+    "_type":"prompt",
+    "input_variables":["name","what"],
+    "template":"给我讲一个关于{name}的{what}故事"
+}
+~~~
 
 ~~~python
 from langchain.prompts import load_prompt

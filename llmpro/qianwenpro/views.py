@@ -397,4 +397,35 @@ def echartssse(request):
     response['Cache-Control'] = 'no-cache'
     return response
 
-
+class TestInterface(APIView):
+    def get(self,request):
+        res = requests.post("http://localhost:8000/cates/")
+        print(res.text)
+        return Response({"code":222})
+#添加分类接口
+class CatesView(APIView):
+    def post(self,request):
+        # code = "h" +str(random.randint(100,999))
+        cates = Cates.objects.create()
+        return Response({"code":200,'cateid':cates.id})
+    
+#添加消息接口
+class QuestionsView(APIView):
+    def post(self,request):
+        #接收参数
+        ask = request.data['ask']
+        cateid = request.data['cateid']
+        #调用模型获取答案
+        answer = "34234234"
+        #判断是否需要更新分类名称
+        cates = Cates.objects.filter(id=cateid).first()
+        cname = ''
+        if not cates.name:
+            #如果需要调用模型从ask中获取20个字符
+            cname = '234234'
+            cates.name = ask
+            cates.save()
+        #写入问答表
+        Questions.objects.create(ask=ask,answer=answer,cid_id=cateid)
+        
+        return Response({"code":200,'catename':cname,'answer':answer})

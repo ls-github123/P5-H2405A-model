@@ -2,9 +2,14 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HelloWorld from '../views/HelloWorld.vue'
 import tsse from '../views/tsse.vue'
 import echartstest from '../views/echartstest.vue'
+import rag from '../views/rag.vue'
 
 
 const routes = [{
+        path: '/rag',
+        name: 'rag',
+        component: rag
+    }, {
         path: '/',
         name: 'HelloWorld',
         component: HelloWorld

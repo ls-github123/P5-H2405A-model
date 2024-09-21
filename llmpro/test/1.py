@@ -1,8 +1,18 @@
-# 请求地址：http://apis.juhe.cn/simpleWeather/query
-# 请求参数：city=%E5%8C%97%E4%BA%AC&key=545cf0be******325cf6c4
-# 请求方式：GET
-# Header： 
-#    Content-Type：application/x-www-form-urlencoded
-import requests
-res = requests.get('http://apis.juhe.cn/simpleWeather/query',params={"city":'北京',"key":"545cf0bec2b0682dcc2c8f68325cf6c4"},headers={"Content-Type":"application/x-www-form-urlencoded"})
-print(res.text)
+# pip install openai
+
+# Example: reuse your existing OpenAI setup
+from openai import OpenAI
+
+# Point to the local server
+client = OpenAI(base_url="https://446859-proxy-8000.dsw-gateway-cn-shanghai.data.aliyun.com/", api_key="none")
+
+completion = client.chat.completions.create(
+  model="qwen:7b",
+  messages=[
+    {"role": "user", "content": "讲一个50字以内的笑话"}
+  ],
+  temperature=0.7,
+  top_p=0.95,
+)
+
+print(completion)

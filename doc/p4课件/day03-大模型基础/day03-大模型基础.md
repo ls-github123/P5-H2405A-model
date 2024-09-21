@@ -1086,6 +1086,57 @@ DashScopeEmbeddings 是指使用阿里云DashScope平台提供的嵌入（Embedd
 
 ### 3.8综合案例
 
+接口文档
+
+~~~
+项目经理 ：对外，对接功能
+产品经理 ：需求分析说明书、原型图
+开发人员  
+前端 -》ui设计师  画图、切图、html+css+js   index.html
+       前端工程师  index.html变成vue文件，axios,提交，获取信息
+后端-》数据库设计（数据库字典、ER图）、接口文档、代码编写，index.html变成vue文件，axios,提交，获取信息
+测试-》根据需求分析文档写case
+运维-》根据项目架构搭建服务器 一台nginx、两台mysql主重、一台redis,测试服务，正式服务，git服务器
+
+~~~
+
+接口文档
+
+1.测试地址：http://dev.xx.com/
+
+服务地址：http://xx.com/
+
+采用的授权方式jwt token，先注册应用获取到appid  serectkey。所有接口操作统一在头部携带token
+
+1.1授权接口，获取token
+
+<table>
+  <tr><td>请求地址</td><td>login</td></tr>
+  <tr><td>请求方式</td><td>POST</td></tr>
+  <tr><td>传入参数</td><td>{"appid":'11',"serectkey":'22'}</td></tr>
+  <tr><td>响应结果</td><td>{"code":200,"mes":"","token":"234234"}  code 200成功  1001用户不存在</td></tr>
+</table>
+
+1.2添加分类
+
+<table>
+  <tr><td>请求地址</td><td>cates</td></tr>
+  <tr><td>请求方式</td><td>POST</td></tr>
+  <tr><td>传入参数</td><td>{}</td></tr>
+  <tr><td>响应结果</td><td>{"code":200,"cateid":""}  code 200成功  1001用户不存在</td></tr>
+</table>
+
+1.3添加问答
+
+<table>
+  <tr><td>请求地址</td><td>questions</td></tr>
+  <tr><td>请求方式</td><td>POST</td></tr>
+  <tr><td>传入参数</td><td>{"ask":"今天几号","cateid":1}</td></tr>
+  <tr><td>响应结果</td><td>{"code":200,"answer":"今天8号","catename":"今天几号"}  code 200成功  1001用户不存在</td></tr>
+</table>
+
+
+
 #### 3.7.1需求如下：
 
 <img src="images/image-20240612172205490.png">
