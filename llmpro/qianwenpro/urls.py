@@ -29,5 +29,6 @@ urlpatterns = [
     path('echartssse/',echartssse),
     path('randromCount/',RandromCount.as_view()),
     path('cates/',CatesView.as_view()),
-    path('questions/',QuestionsView.as_view())
+    path('questions/',QuestionsView.as_view()),
+    path('catesall/',Catesall.as_view())
 ]

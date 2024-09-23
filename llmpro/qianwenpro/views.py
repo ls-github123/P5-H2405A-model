@@ -490,3 +490,11 @@ class QuestionsView(APIView):
         ser = QuestionsSer(ques,many=True)
         #返回
         return Response({"code":200,'qlist':ser.data})
+    
+#批量删除  
+class Catesall(APIView):
+    def post(self,request):
+        ids = request.data['ids']
+        Cates.objects.filter(id__in=ids).delete()
+        return Response({"code":200})
+  

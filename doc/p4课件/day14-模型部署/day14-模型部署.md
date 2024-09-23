@@ -320,6 +320,8 @@ GPU推理
 
    python web_demo.py --server-name 0.0.0.0 -c  Qwen-7B-Chat
 
+python openai_api.py  -c=Qwen-7B-Chat
+
 启动模型
 
 ~~~
@@ -350,24 +352,32 @@ python openai_api.py --cpu-only -c=Qwen-1_8B-Chat
 访问本地模型
 
 ~~~python
-pip install openai
+import openai
+openai.api_base = "http://localhost:8000/v1"
+openai.api_key = "none"
 
-# Example: reuse your existing OpenAI setup
-from openai import OpenAI
+# 使用流式回复的请求
+for chunk in openai.ChatCompletion.create(
+    model="Qwen",
+    messages=[
+        {"role": "user", "content": "你好"}
+    ],
+    stream=True
+    # 流式输出的自定义stopwords功能尚未支持，正在开发中
+):
+    if hasattr(chunk.choices[0].delta, "content"):
+        print(chunk.choices[0].delta.content, end="", flush=True)
 
-# Point to the local server
-client = OpenAI(base_url="http://localhost:8000/v1", api_key="none")
-
-completion = client.chat.completions.create(
-  model="qwen:1.8b",
-  messages=[
-    {"role": "user", "content": "讲一个50字以内的笑话"}
-  ],
-  temperature=0.7,
-  top_p=0.95,
+# 不使用流式回复的请求
+response = openai.ChatCompletion.create(
+    model="Qwen",
+    messages=[
+        {"role": "user", "content": "帮我写一篇关于春天的作文"}
+    ],
+    stream=False,
+    stop=[] # 在此处添加自定义的stop words 例如ReAct prompting时需要增加： stop=["Observation:"]。
 )
-
-print(completion.choices[0].message)
+print(response.choices[0].message.content)
 ~~~
 
 使用langchain

@@ -41,32 +41,49 @@
        
     </el-col>
   </el-row>
-
+  <el-row style="text-align:left;">
+   <el-checkbox
+    v-model="checkAll"
+    :indeterminate="isIndeterminate"
+    @change="handleCheckAllChange"
+  >
+  </el-checkbox>
+    </el-row>
+  <el-checkbox-group
+    v-model="checkedCities"
+    @change="handleCheckedCitiesChange"
+  >
    <el-table :data="tableData" style="width: 100%">
-    <el-table-column type="selection" width="55" />
+    <el-table-column  width="55" >
+   
+    </el-table-column>
+  
+    
+ 
     <el-table-column label="Date" width="120">
-      <template #default="scope">{{ scope.row.date }}</template>
+    <template #default="scope">
+    <el-checkbox  :label="scope.row.date" :value="scope.row.id">
+      {{ scope.row.date }}
+    </el-checkbox>
+    </template>
     </el-table-column>
     <el-table-column property="name" label="Name" width="120" />
-    <el-table-column
-      property="address"
-      label="use show-overflow-tooltip"
-      width="240"
-      show-overflow-tooltip
-    />
-    <el-table-column property="address" label="address" />
+   
+
      <el-table-column fixed="right" label="Operations" min-width="120">
-      <template #default>
-        <el-button link type="primary" size="small">删除</el-button>
+      <template #default="scope">
+        <el-button link type="primary" size="small" @click="delone(scope.row.id)">删除</el-button>
       </template>
     </el-table-column>
+    
   </el-table>
+   </el-checkbox-group>
   <el-row>
     <el-col :span="12"><div class="grid-content ep-bg-purple" />
     <el-pagination background layout="prev, pager, next" :total="1000" />
     </el-col>
     <el-col :span="12"><div class="grid-content ep-bg-purple-light" />
-    <el-button>删除所有</el-button>
+    <el-button @click="deleteall">删除所有</el-button>
     </el-col>
   </el-row>
 
@@ -90,13 +107,16 @@ const sname = ref('');
 const cateid=ref('')
 const catename=ref('')
 const dialogTableVisible=ref(false)
+const checkedvalue = ref([])
 const tableData=ref([
   {
+    id:139,
     date: '2016-05-04',
     name: 'Aleyna Kutzner',
     address: 'Lohrbergstr. 86c, Süd Lilli, Saarland',
   },
   {
+    id:138,
     date: '2016-05-03',
     name: 'Helen Jacobi',
     address: '760 A Street, South Frankfield, Illinois',
@@ -160,6 +180,47 @@ const submitMessage=()=> {
 const showdialog=()=>{
   dialogTableVisible.value=true
 }
+
+//单个删除
+const delone=(id)=>{
+  alert(id)
+}
+
+const change=()=>{
+  alert(checkedvalue.value)
+  console.log(checkedvalue.value)
+}
+
+
+const checkAll = ref(false)
+const isIndeterminate = ref(true)
+const checkedCities = ref([])
+const cities=[137,138]
+const checkvalue=ref([])
+
+
+const handleCheckAllChange = (val: boolean) => {
+  checkedCities.value = val ? cities : []
+  isIndeterminate.value = false
+  console.log(checkedCities.value)
+}
+const handleCheckedCitiesChange = (value: string[]) => {
+  // alert(value)
+  checkvalue.value = value
+ 
+  // alert(checkedCities.value)
+  // const checkedCount = value.length
+  // checkAll.value = checkedCount === cities.length
+  // isIndeterminate.value = checkedCount > 0 && checkedCount < cities.length
+  // console.log(checkedCities)
+}
+
+const deleteall=()=>{
+   http.post('catesall/',{'ids':checkvalue.value}).then(res=>{
+
+  })
+}
+
 </script>
 
 <style scoped>
