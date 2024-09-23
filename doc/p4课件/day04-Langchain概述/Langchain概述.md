@@ -162,14 +162,36 @@ from langchain.prompts import PromptTemplate
 # 导入通义大模型
 from langchain_community.llms import Tongyi
 # 定义一个模板
-pp = "{county}{city}的首都是哪里？"
+pp = "{county}的首都是哪里？"
 # 实例化模板类
 promptTemplate = PromptTemplate.from_template(pp)
 # 输入
 #ins = input("请输入国家名：")
 ins = "中国"
 # 生成prompt
-prompt = promptTemplate.format(county=ins,city=input)
+prompt = promptTemplate.format(county=ins)
+print(prompt)
+
+# 实例化通义大模型
+tongyi = Tongyi()
+ret = tongyi.invoke(prompt)
+print(ret)
+~~~
+
+~~~python
+# 1导入prompt的类
+from langchain.prompts import PromptTemplate
+# 导入通义大模型
+from langchain_community.llms import Tongyi
+# 定义一个模板
+pp = "对文章{mes}进行总结，提取摘要，最多返回10个字符"
+# 实例化模板类
+promptTemplate = PromptTemplate.from_template(pp)
+# 输入
+#ins = input("请输入国家名：")
+input = "春天，是四季轮回中最温柔的一章，是大自然苏醒的序曲。当冬天的最后一丝寒意逐渐消散，温暖的阳光开始洒满大地，万物开始展现出勃勃生机。春天，不仅仅是一个季节的更替，更是生命与希望的象征。"
+# 生成prompt
+prompt = promptTemplate.format(mes=input)
 print(prompt)
 
 # 实例化通义大模型

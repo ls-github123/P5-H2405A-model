@@ -73,6 +73,7 @@ https://modelscope.cn/models/ZhipuAI/glm-4-9b/files
 
 搜索中输入 PAI-DSW
 
+export GRADIO_ROOT_PATH=/${JUPYTER_NAME}/proxy/7860/
 ~~~
 
 3.点击开始使用
@@ -296,11 +297,11 @@ conda create -n qwen1 python == 3.10.1
 
 conda activate qwen1
 
+cd Qwen
+
 pip install -r requirements.txt
 
 #### 3.模型下载
-
-cd Qwen
 
 git clone https://www.modelscope.cn/qwen/Qwen-7B-Chat.git
 
@@ -328,7 +329,7 @@ python openai_api.py  -c=Qwen-7B-Chat
 - 交互式Demo
 ```
 cd Qwen
-python cli_demo.py -c Qwen-1_8B-Chat
+python cli_demo.py  -c Qwen-1_8B-Chat
 ```
 
 - chat界面
@@ -345,7 +346,7 @@ http://127.0.0.1:8000/
 # 先安装依赖
 pip install fastapi sse_starlette uvicorn pydantic
 # 启动API服务
-python openai_api.py --cpu-only -c=Qwen-1_8B-Chat
+python openai_api.py  -c=Qwen-7B-Chat
 ```
 ~~~
 
