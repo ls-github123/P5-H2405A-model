@@ -328,6 +328,7 @@ sklearn最大余弦相似度
 from sklearn.feature_extraction.text import TfidfVectorizer  
 from sklearn.metrics.pairwise import cosine_similarity  
 from typing import List, Dict  
+import numpy as np
   
 # 假设的商品数据，每个商品由多个标签（特征）组成  
 products = [  
@@ -348,7 +349,7 @@ product_texts = [product_to_text(p) for p in products]
 product_vectors = vectorizer.fit_transform(product_texts)  
   
 # 余弦相似度计算函数  
-def recommend_products(query_features: List[str], k: int = 3) -> List[Dict]:  
+def recommend_products(query_features: List[str], k: int = 2) -> List[Dict]:  
     query_text = " ".join(query_features)  
     query_vector = vectorizer.transform([query_text])  
       

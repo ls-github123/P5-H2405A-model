@@ -503,6 +503,24 @@ GLM-4-9B 是智谱 AI 推出的最新一代预训练模型 GLM-4 系列中的开
 GLM-4-9B 的基座版本，支持8K上下文长度
 ~~~
 
+#### 1.安装langchain-chatchat
+
+```
+pip install "langchain-chatchat[xinference]" -U
+```
+
+#### 2.安装Xinference推理模型
+
+Xinference 在 Linux, Windows, MacOS 上都可以通过 `pip` 来安装。如果需要使用 Xinference 进行模型推理，可以根据不同的模型指定不同的引擎。
+
+如果你希望能够推理所有支持的模型，可以用以下命令安装所有需要的依赖：
+
+```
+pip install "xinference[all]"
+```
+
+
+
 
 
 ## **四、本单元知识总结**

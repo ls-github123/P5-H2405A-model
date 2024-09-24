@@ -497,4 +497,29 @@ class Catesall(APIView):
         ids = request.data['ids']
         Cates.objects.filter(id__in=ids).delete()
         return Response({"code":200})
-  
+# 1导入prompt的类
+from langchain.prompts import PromptTemplate
+# 导入通义大模型
+from langchain_community.llms import Tongyi
+def getCates(mes):
+    # 定义一个模板
+    pp = "目前有三个分类，A:好评，B:中评，C:差评，请你对以下信息{mes}进行评价，返回分类,只返回字母"
+    # 实例化模板类
+    promptTemplate = PromptTemplate.from_template(pp)
+    # 输入
+    input = "这个洗地机拖地不干净，不方便"
+    # 生成prompt
+    prompt = promptTemplate.format(mes=mes)
+    
+    # 实例化通义大模型
+    tongyi = Tongyi()
+    ret = tongyi.invoke(prompt)
+    return ret
+
+
+class DDUrl(APIView):
+    def get(self,request):
+        redicturl = "http://127.0.0.1:8000/ddcallback/"
+        cid = "dingiovq0d3pjsfj8222"
+        url = "https://login.dingtalk.com/oauth2/auth?redirect_uri=%s&response_type=code&client_id=%s&scope=openid&state=dddd&prompt=consent"%(redicturl,cid)
+        return Response({"code":200,'url':url})

@@ -117,7 +117,7 @@ from langchain_community.llms import Tongyi
 # 实例化
 llm = Tongyi()
 # 调用通义千问
-ret =  llm.invoke("你是谁？")
+ret =  llm.invoke("这个商品功能很全，清洗方便")
 print(ret)
 ~~~
 
@@ -188,7 +188,6 @@ pp = "对文章{mes}进行总结，提取摘要，最多返回10个字符"
 # 实例化模板类
 promptTemplate = PromptTemplate.from_template(pp)
 # 输入
-#ins = input("请输入国家名：")
 input = "春天，是四季轮回中最温柔的一章，是大自然苏醒的序曲。当冬天的最后一丝寒意逐渐消散，温暖的阳光开始洒满大地，万物开始展现出勃勃生机。春天，不仅仅是一个季节的更替，更是生命与希望的象征。"
 # 生成prompt
 prompt = promptTemplate.format(mes=input)
@@ -198,6 +197,35 @@ print(prompt)
 tongyi = Tongyi()
 ret = tongyi.invoke(prompt)
 print(ret)
+~~~
+
+### 综合案例
+
+~~~
+评价模块
+计算机基础
+python基础
+。。。
+缓存：并发访问情况下大量请求redis不存在，请求mysql，怎么办？setnex
+     mysql和redis数据同步的问题？ 延时双删
+     
+     
+购物车表、redis hash购物车
+订单表
+订单详情表
+支付表
+
+我的订单
+计算机基础   评价
+python基础  评价
+
+好评（100）  中评（10）  差评（3）
+
+评价表
+id  userid  courseid   cotent  level
+
+
+
 ~~~
 
 
