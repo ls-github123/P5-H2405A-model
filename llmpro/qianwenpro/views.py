@@ -1,5 +1,5 @@
 from django.shortcuts import render
-# from django.http import JsonResponse,HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import *
@@ -516,6 +516,22 @@ def getCates(mes):
     ret = tongyi.invoke(prompt)
     return ret
 
+class CommentView(APIView):
+    def post(self,request):
+        #获取参数 userid gid message
+        userid = request.data['userid']
+        gid = request.data['gid']
+        message = request.data['message']
+        level = getCates(message)
+        data = {"userid":userid,"goodsid":gid,'message':message,'level':level}
+        ser = CommentSer(data=data)
+        if ser.is_valid():
+            ser.save()
+            return Response({"code":200})
+        else:
+            print(ser.errors)
+            return Response({"code":10010,'mess':ser.errors})
+
 
 class DDUrl(APIView):
     def get(self,request):
@@ -523,3 +539,44 @@ class DDUrl(APIView):
         cid = "dingiovq0d3pjsfj8222"
         url = "https://login.dingtalk.com/oauth2/auth?redirect_uri=%s&response_type=code&client_id=%s&scope=openid&state=dddd&prompt=consent"%(redicturl,cid)
         return Response({"code":200,'url':url})
+    
+    
+class DDcallback(APIView):
+    def get(self,request):
+        #获取code
+        authCode = request.query_params.get('code')
+
+        # 根据authCode获取用户accessToken
+        data = {
+            "clientId": "dingiovq0d3pjsfj8222",
+            "clientSecret": "gFVW1sn3Os1w4McptVJ0B1QxSFArEUAx58GiiVAU-wCQhXIll03pzAiM6Ept_24Q",
+            "code": authCode,
+            "grantType": "authorization_code"
+        }
+        resp = requests.post('https://api.dingtalk.com/v1.0/oauth2/userAccessToken', json=data).json()
+        accessToken = resp.get('accessToken')
+
+        # 根据accessToken获取用户信息
+        headers = {"x-acs-dingtalk-access-token": accessToken}
+        resp = requests.get('https://api.dingtalk.com/v1.0/contact/users/me', headers=headers).json()
+        name = resp.get('nick')
+        uid = resp.get('openId')
+        phone = resp.get('mobile')
+        
+        #获取token
+        #调用用户接口获取用户信息uid mobile
+        # sfusers = Sflogin.objects.filter(uid=uid).first()
+        # userid = sfusers.userid
+        # if not sfusers:
+        #     users = Tusers.objects.create(mobile=phone,nikename=name)
+        #     userid = users.id
+        #     Sflogin.objects.create(userid=users.id,uid=uid,types='dingding')
+        # data={"userid":userid,'time':int(time.time())}
+        # token = myjwt.jwt_encode(data)
+            
+        #根据uid查询三方登录表，如果存在取出userid，
+        #如果不存在，用mobile写入用户表，把userid和uid写入三方登录表
+        #调用jwt生成token,HttpResponseRedirect重定向到vue中转页面
+        token = "123"
+        userid=1
+        return HttpResponseRedirect("http://localhost:5173/updatetoken?token="+token+"&userid="+str(userid))

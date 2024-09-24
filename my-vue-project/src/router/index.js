@@ -3,9 +3,19 @@ import HelloWorld from '../views/HelloWorld.vue'
 import tsse from '../views/tsse.vue'
 import echartstest from '../views/echartstest.vue'
 import rag from '../views/rag.vue'
+import userinfo from '../views/userinfo.vue'
+import updatetoken from '../views/updatetoken.vue'
 
 
 const routes = [{
+        path: '/updatetoken',
+        name: 'updatetoken',
+        component: updatetoken
+    }, {
+        path: '/userinfo',
+        name: 'userinfo',
+        component: userinfo
+    }, {
         path: '/rag',
         name: 'rag',
         component: rag
