@@ -207,8 +207,7 @@ print(ret)
 python基础
 。。。
 缓存：并发访问情况下大量请求redis不存在，请求mysql，怎么办？setnex
-     mysql和redis数据同步的问题？ 延时双删
-     
+     mysql和redis数据同步的问题？ 延时双删 
      
 购物车表、redis hash购物车
 订单表
@@ -223,8 +222,6 @@ python基础  评价
 
 评价表
 id  userid  courseid   cotent  level
-
-
 
 ~~~
 

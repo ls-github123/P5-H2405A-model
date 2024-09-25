@@ -4,6 +4,15 @@
   <ul>
   <li v-for="i in orderlist">
   {{i.id}}{{i.money}}
+  <ul>
+    <li v-for="j in i.detail">
+    {{j.id}}
+     {{j.name}}
+    <p v-if="i.pay_status==2 & j.status==1"><el-button>评价</el-button></p>
+    <p v-if="j.status==2">已评论</p>
+    <p v-else></p>
+    </li>
+  </ul>
   </li>
   </ul>
   <div v-show="show">
@@ -23,7 +32,8 @@ const myorder=()=>{
     var userid = localStorage.getItem('userid')
     if(userid){
         //获取订单列表
-        orderlist.value=[{"id":1001,'money':500,"detail":[{"id":1,'name':'python'}]}]
+        orderlist.value=[{"id":1001,'money':500,"pay_status":2,"detail":[{"id":1,'name':'python','status':1}]},
+        {"id":1002,'money':300,"pay_status":2,"detail":[{"id":1,'name':'python','status':2}]}]
     }else{
         //获取dingdingurl
         http.get('ddurl/').then(res=>{
