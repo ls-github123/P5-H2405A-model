@@ -43,3 +43,13 @@ class Book(models.Model):
 
     def __str__(self):
         return self.title
+    
+    
+class Goods(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    sales = models.IntegerField()
+    tags = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.title

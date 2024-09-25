@@ -310,6 +310,7 @@ examples =  [
     {"id": "5", "features": ', '.join(["时尚", "板鞋", "滑板"])}, 
 ]  
 
+
 #构造提示词模板
 example_prompt = PromptTemplate(
     input_variables=["id","features"],

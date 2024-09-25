@@ -580,3 +580,56 @@ class DDcallback(APIView):
         token = "123"
         userid=1
         return HttpResponseRedirect("http://localhost:5173/updatetoken?token="+token+"&userid="+str(userid))
+    
+
+from langchain.prompts import PromptTemplate
+from langchain.prompts import FewShotPromptTemplate
+from langchain.prompts.example_selector import SemanticSimilarityExampleSelector
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import DashScopeEmbeddings
+from langchain_community.llms import Tongyi
+           
+class TestSMM(APIView):
+    def get(self,request):
+        goods = Goods.objects.all()
+        #假设已经有这么多的提示词示例组：
+        examples =  [{"id": str(i.id), "features": i.tags} for i in goods]
+       
+        # #构造提示词模板
+        example_prompt = PromptTemplate(
+            input_variables=["id","features"],
+            template="{id},"
+        )
+       
+        # #调用MMR
+        example_selector = SemanticSimilarityExampleSelector.from_examples(
+            #传入示例组
+            examples,
+            #使用阿里云的dashscope的嵌入来做相似性搜索
+            DashScopeEmbeddings(),
+            #设置使用的向量数据库是什么
+            FAISS,
+            #结果条数
+            k=3,
+        )
+
+        # #使用小样本提示词模版来实现动态示例的调用
+        dynamic_prompt = FewShotPromptTemplate(
+            example_selector=example_selector,
+            example_prompt=example_prompt,
+            prefix="",
+            suffix="",
+            input_variables=["word"]
+        )
+        #查询用户浏览记录表，获取前5条 tags
+        res = dynamic_prompt.format(word="时尚")
+        items = res.split(',')
+        ids = [int(item.strip()) for item in items if item.strip()]
+        # #查询我游览过的[3,2,1]
+        vlist = [1,2,4]
+        difference = list(filter(lambda x: x not in vlist, ids))
+        print(difference)  # 输出: [1]
+        goods = Goods.objects.filter(id__in=difference).all()
+        
+        return Response({"code":200})
+    

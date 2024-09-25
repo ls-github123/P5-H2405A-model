@@ -32,5 +32,6 @@ urlpatterns = [
     path('questions/',QuestionsView.as_view()),
     path('catesall/',Catesall.as_view()),
     path('ddurl/',DDUrl.as_view()),
-    path('ddcallback/',DDcallback.as_view())
+    path('ddcallback/',DDcallback.as_view()),
+    path('testSMM/',TestSMM.as_view())
 ]
