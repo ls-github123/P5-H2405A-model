@@ -19,7 +19,7 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path("test/", TestInterface.as_view()),
+    path("test/", Test.as_view()),
     path('ask/',Ask.as_view()),
     path('streamask/',StreamAsk.as_view()),
     # path('sse/',sse_view),
