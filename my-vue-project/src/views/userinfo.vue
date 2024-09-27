@@ -18,6 +18,16 @@
   <div v-show="show">
   <a :href="ddurl">钉钉</a>
   </div>
+
+  <div>
+  <el-upload
+    class="avatar-uploader"
+    :before-upload="upload"
+  >
+   <el-icon  class="avatar-uploader-icon">上传</el-icon>
+  </el-upload>
+
+  </div>
   </div>
 </template>
 
@@ -28,6 +38,14 @@ import http from '../http'
 const orderlist=ref([])
 const show = ref(false)
 const ddurl = ref('')
+
+const upload=(file)=>{
+  const fd = new FormData()
+  fd.append("file",file)
+  http.post('test/',fd).then(res=>{
+
+  })
+}
 const myorder=()=>{
     var userid = localStorage.getItem('userid')
     if(userid){

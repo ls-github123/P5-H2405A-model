@@ -109,7 +109,7 @@ if response_text:
 
 代码实现
 
-~~~
+~~~python
 class Test(APIView):
     def get(self,request):
         
@@ -181,6 +181,65 @@ class Test(APIView):
         data = json.loads(ret)
         print(data)
         return Response({"code":200,'data':data})
+~~~
+
+django文件本地上传
+
+vue
+
+~~~
+ <el-upload
+    class="avatar-uploader"
+    :before-upload="upload"
+  >
+   <el-icon  class="avatar-uploader-icon">上传</el-icon>
+  </el-upload>
+  
+const upload=(file)=>{
+  const fd = new FormData()
+  fd.append("file",file)
+  http.post('test/',fd).then(res=>{
+
+  })
+}
+~~~
+
+django
+
+~~~
+file = request.FILES.get('file')
+print(file)
+filename = file.name
+
+with open(f'./static/upload/{filename}', 'wb') as f:
+for chunk in file.chunks():
+f.write(chunk)
+~~~
+
+读取某个文件夹下所有文件
+
+~~~python
+# 指定文件夹路径
+        folder_path = './static/upload/'
+        from langchain.document_loaders import DirectoryLoader
+        # 使用 DirectoryLoader 加载文件夹中的所有文件
+        loader = DirectoryLoader(folder_path, glob='**/*.txt')  # 根据需要调整文件类型
+        documents = loader.load()
+
+        # 检查加载的文档数量
+        print(f'Loaded {len(documents)} documents from {folder_path}')
+
+        # 将文档分割成小块（可选）
+        text_splitter = CharacterTextSplitter(chunk_size=10, chunk_overlap=0)
+        chunks = text_splitter.split_documents(documents)
+       
+        # 创建向量存储
+        # db = FAISS.from_documents(chunks, cached_embedder)
+        faissdb.add(chunks,'mtlist')
+        res = faissdb.search("电脑",'mtlist',4)
+
+        # 检查分割后的文本数量
+        print(res)
 ~~~
 
 

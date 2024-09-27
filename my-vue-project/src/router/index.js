@@ -5,9 +5,13 @@ import echartstest from '../views/echartstest.vue'
 import rag from '../views/rag.vue'
 import userinfo from '../views/userinfo.vue'
 import updatetoken from '../views/updatetoken.vue'
-
+import fileupload from '../views/fileupload.vue'
 
 const routes = [{
+        path: '/fileupload',
+        name: 'fileupload',
+        component: fileupload
+    }, {
         path: '/updatetoken',
         name: 'updatetoken',
         component: updatetoken

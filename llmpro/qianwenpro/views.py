@@ -7,6 +7,8 @@ from tools.textload import getdoc
 import os
 # Create your views here.
 from tools.faissdb import faissdb
+from langchain.document_loaders import DirectoryLoader
+from langchain.text_splitter import CharacterTextSplitter
 
 class Test(APIView):
     def get(self,request):
@@ -67,22 +69,60 @@ class Test(APIView):
         return Response({"code":200})
     
     def post(self,request):
-        ask = "电影"
-        res = faissdb.search(ask,'movielist',4)
+        # 指定文件夹路径
+        folder_path = './static/upload/'
+        from langchain.document_loaders import DirectoryLoader
+        # 使用 DirectoryLoader 加载文件夹中的所有文件
+        loader = DirectoryLoader(folder_path, glob='**/*.txt')  # 根据需要调整文件类型
+        documents = loader.load()
+
+        # 检查加载的文档数量
+        print(f'Loaded {len(documents)} documents from {folder_path}')
+
+        # 将文档分割成小块（可选）
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        chunks = text_splitter.split_documents(documents)
+        
        
-        prompt = "请帮我从以下{res}中返回三部电影的名称和请求地址,返回格式转成json格式返回,返回格式转成json格式返回,只返回json数据，不要任务描述信息"
-        promptTemplate = PromptTemplate.from_template(prompt)
-        # 生成prompt
-        prompt = promptTemplate.format(res=res)
-        tongyi = Tongyi()
-        ret = tongyi.invoke(prompt)
-        data = json.loads(ret)
-        print(data)
-        return Response({"code":200,'data':data})
+        # 创建向量存储
+        # db = FAISS.from_documents(chunks, cached_embedder)
+        faissdb.add(chunks,'mtlist')
+        res = faissdb.search("电影",'mtlist',4)
+
+        # 检查分割后的文本数量
+        print(res)
+
+        
+        
+
+        # ask = "电影"
+        # res = faissdb.search(ask,'movielist',4)
+       
+        # prompt = "请帮我从以下{res}中返回三部电影的名称和请求地址,返回格式转成json格式返回,返回格式转成json格式返回,只返回json数据，不要任务描述信息"
+        # promptTemplate = PromptTemplate.from_template(prompt)
+        # # 生成prompt
+        # prompt = promptTemplate.format(res=res)
+        # tongyi = Tongyi()
+        # ret = tongyi.invoke(prompt)
+        # data = json.loads(ret)
+        # print(data)
+        # django文件上传
+        #文件上传
+
+        #获取参数
+       
+        # file = request.FILES.get('file')
+        # print(file)
+        # filename = file.name
+        
+        # with open(f'./static/upload/{filename}', 'wb') as f:
+        #     for chunk in file.chunks():
+        #         f.write(chunk)
+        return Response({"code":200,'data':"data"})
         
 class TestFasiss(APIView):
     def get(self,request):
-        res = requests.post("http://localhost:8000/test/")
+        # res = requests.post("http://localhost:8000/test/")
         # print(res.json())
         return Response({"code":200})
     
@@ -715,4 +755,43 @@ class MovieData(APIView):
     def get(self,request):
         res = requests.get('https://movie.douban.com/',headers={"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"})
         print(res.text)
+        return Response({"code":200})
+    
+    
+class FileUpload(APIView):
+    def post(self,request):
+        #获取文件流
+        file  = request.FILES.get('file')
+        #获取文件名
+        name = file.name
+        #指定要上传的目录
+        path = './static/upload/'+name
+        #写入文件
+        with open(os.path.join(path),'wb') as f:
+            for i in file.chunks():
+                f.write(i)
+        return Response({"code":200})
+    
+    def get(self,request):
+        # 指定文件夹路径
+        folder_path = './static/upload/'
+        from langchain.document_loaders import DirectoryLoader
+        # 使用 DirectoryLoader 加载文件夹中的所有文件
+        loader = DirectoryLoader(folder_path, glob='**/*.txt')  # 根据需要调整文件类型
+        documents = loader.load()
+
+        # 检查加载的文档数量
+        print(f'Loaded {len(documents)} documents from {folder_path}')
+
+        # 将文档分割成小块（可选）
+        text_splitter = CharacterTextSplitter(chunk_size=10, chunk_overlap=0)
+        chunks = text_splitter.split_documents(documents)
+       
+        # 创建向量存储
+        # db = FAISS.from_documents(chunks, cached_embedder)
+        faissdb.add(chunks,'alist')
+        res = faissdb.search("电脑",'alist',4)
+
+        # 检查分割后的文本数量
+        print(res)
         return Response({"code":200})
