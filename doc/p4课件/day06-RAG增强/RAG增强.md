@@ -545,15 +545,117 @@ res = db.similarity_search("NBA冠军球队是哪个", k=3)
 print(res)
 ~~~
 
-综合案例
+代码实现
 
+~~~python
+def get(self,request):
+        
+        from bs4 import BeautifulSoup
+        res = requests.get('https://movie.douban.com/',headers={"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"})
+        html = res.text
+        soup = BeautifulSoup(html, 'html.parser')
+
+        movies = []
+
+        for review in soup.find_all('div', class_='review'):
+            movie_link_tag = review.find('div', class_='review-hd').find('a')
+            movie_title_tag = review.find('div', class_='review-meta').find_all('a')[-1]
+            
+            movie_url = movie_link_tag['href']
+            movie_name = movie_title_tag.text.strip().replace('《', '').replace('》', '')
+            
+            movies.append({'电影名称': movie_name, 'url': movie_url})
+            
+        # 指定文件名
+        file_name = './static/upload/output.json'
+
+        # 使用 with 语句确保文件正确关闭
+        with open(os.path.join(file_name), 'w', encoding='utf-8') as file:
+            # 使用 json.dump 将 Python 对象转换为 JSON 格式并写入文件
+            json.dump(movies, file, ensure_ascii=False, indent=4)
+
+        print(f"数据已成功写入 {file_name} 文件")
+        
+        # data = getdoc(file_name)
+        # print(data)
+        # 导入所需的模块和类
+        from langchain.embeddings import CacheBackedEmbeddings
+        from langchain.storage import LocalFileStore
+        from langchain_community.document_loaders import TextLoader
+        from langchain_community.vectorstores import FAISS
+        from langchain.embeddings.dashscope import DashScopeEmbeddings
+
+        from langchain_text_splitters import CharacterTextSplitter
+        
+        # 实例化向量嵌入器
+        embeddings = DashScopeEmbeddings()
+        
+        # 初始化缓存存储器
+        store = LocalFileStore("./cache/")
+        
+        # 创建缓存支持的嵌入器
+        cached_embedder = CacheBackedEmbeddings.from_bytes_store( embeddings, store, namespace=embeddings.model)
+        
+        # 加载文档并将其拆分成片段
+        doc = TextLoader(file_name,encoding='utf-8').load()
+        spliter = CharacterTextSplitter("\n",chunk_size=200, chunk_overlap=0)
+        chunks = spliter.split_documents(doc)
+        # 创建向量存储
+        db = FAISS.from_documents(chunks, cached_embedder)
+        res = db.similarity_search("电影", k=3)
+        # print(res)
+        
+        prompt = "请帮我从以下{res}中返回三部电影的名称和请求地址，返回格式转成json格式返回,只返回json数据，不要任务描述信息"
+        promptTemplate = PromptTemplate.from_template(prompt)
+        # 生成prompt
+        prompt = promptTemplate.format(res=res)
+        tongyi = Tongyi()
+        ret = tongyi.invoke(prompt)
+        data = json.loads(ret)
+        return Response({"code":200,'mes':data})
 ~~~
-1.从百度文库下载pdf、word文档，教育  requests.get  豆瓣
-2.以数据进行处理，用正则或者xpath提取电影名称和地址，存入Json文件
-3.加载文档，分隔，向量化处理，写入FAISS数据库
-4.写一个vue页面，输入电影标题，点击搜索
-5.查询向量数据库，获取信息，调用大模型处理返回结果
+
+faiss封装
+
+~~~python
+# 导入所需的模块和类
+from langchain.embeddings import CacheBackedEmbeddings
+from langchain.storage import LocalFileStore
+from langchain_community.document_loaders import TextLoader
+from langchain_community.vectorstores import FAISS
+from langchain.embeddings.dashscope import DashScopeEmbeddings
+
+from langchain_text_splitters import CharacterTextSplitter
+from langchain_community.embeddings.dashscope import DashScopeEmbeddings
+
+
+class DB:
+    def __init__(self):
+        # 实例化向量嵌入器
+        self.embeddings = DashScopeEmbeddings()
+        
+        # 初始化缓存存储器
+        self.store = LocalFileStore("./cache/")
+        
+        # 创建缓存支持的嵌入器
+        self.cached_embedder = CacheBackedEmbeddings.from_bytes_store( self.embeddings, self.store, namespace=self.embeddings.model)
+        
+        print(self.cached_embedder)
+       
+    def add(self,chunks,key):
+            # 创建向量存储
+            db = FAISS.from_documents(chunks, self.cached_embedder)
+            #以索引的方式保存
+            db.save_local(key)
+    def search(self,ask,key,count):
+        db = FAISS.load_local(key,self.cached_embedder,allow_dangerous_deserialization=True)
+        res = db.similarity_search(ask, k=count)
+        return res
+    
+db = DB()
 ~~~
+
+
 
 #### 5.6.3 Milvus
 

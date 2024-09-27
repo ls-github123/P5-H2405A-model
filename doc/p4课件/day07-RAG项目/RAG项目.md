@@ -29,6 +29,170 @@
 
 #### 7.1.1需求分析
 
+~~~
+1.数据采集处理
+	（1）爬虫爬取数据
+	 (2)数据库mysql(在线问诊、医生回答 500多万条)
+	 (3)从百度买800多万条数据（开放api接口，appid,serectkey,获取token，requests.post从api中获取）
+	 (4)公司内部pdf,excel,word
+	 
+2.文档加载、切隔、向量化处理、创建索引，写入向量数据库
+3.输入问题-》通过索引加载向量数据库-》检索（召回k=3）
+4.构建prompt调用模型处理
+~~~
+
+1.数据采集处理
+	（1）爬虫爬取数据
+	 (2)数据库mysql(在线问诊、医生回答 500多万条)
+	 (3)从百度买800多万条数据（开放api接口，appid,serectkey,获取token，requests.post从api中获取）
+	 (4)公司内部pdf,excel,word
+
+​			文件本地上传：写一个vue页面，获取文件，点击提交
+
+​             写一个接口：获取文件流，写到static/upload/1目录下		               
+
+爬虫爬取数据
+
+~~~
+requests.get(url,data,verfy=false)
+requests.post
+ip限制(ip代理池)、user_agent、证书加密（verfy=false）
+list1=[,,,,,]
+
+~~~
+
+ip代理池
+
+~~~python
+import requests
+import random
+
+# 代理池
+proxies = [
+    'http://123.123.123.123:8080',
+    'http://456.456.456.456:8080',
+    'http://789.789.789.789:8080'
+]
+
+def get_random_proxy():
+    """从代理池中随机选择一个代理"""
+    return random.choice(proxies)
+
+def fetch_url(url):
+    """使用随机代理发送请求"""
+    # 获取随机代理
+    proxy = get_random_proxy()
+    # 设置代理
+    proxies = {
+        'http': proxy,
+        'https': proxy,
+    }
+    try:
+        # 发送请求
+        response = requests.get(url, proxies=proxies, timeout=5)
+        # 检查响应状态码
+        if response.status_code == 200:
+            return response.text
+        else:
+            print(f"请求失败，状态码：{response.status_code}")
+    except Exception as e:
+        print(f"请求时发生错误：{e}")
+
+# 示例 URL
+url = 'http://example.com'
+
+# 发送请求
+response_text = fetch_url(url)
+if response_text:
+    print(response_text)
+~~~
+
+代码实现
+
+~~~
+class Test(APIView):
+    def get(self,request):
+        
+        from bs4 import BeautifulSoup
+        res = requests.get('https://movie.douban.com/',headers={"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"})
+        html = res.text
+        soup = BeautifulSoup(html, 'html.parser')
+
+        movies = []
+
+        for review in soup.find_all('div', class_='review'):
+            movie_link_tag = review.find('div', class_='review-hd').find('a')
+            movie_title_tag = review.find('div', class_='review-meta').find_all('a')[-1]
+            
+            movie_url = movie_link_tag['href']
+            movie_name = movie_title_tag.text.strip().replace('《', '').replace('》', '')
+            
+            movies.append({'电影名称': movie_name, 'url': movie_url})
+            
+        # 指定文件名
+        file_name = './static/upload/movie.json'
+
+        # 使用 with 语句确保文件正确关闭
+        with open(os.path.join(file_name), 'w', encoding='utf-8') as file:
+            # 使用 json.dump 将 Python 对象转换为 JSON 格式并写入文件
+            json.dump(movies, file, ensure_ascii=False, indent=4)
+
+        print(f"数据已成功写入 {file_name} 文件")
+        
+        # data = getdoc(file_name)
+        # print(data)
+        # 导入所需的模块和类
+        from langchain.embeddings import CacheBackedEmbeddings
+        from langchain.storage import LocalFileStore
+        from langchain_community.document_loaders import TextLoader
+        from langchain_community.vectorstores import FAISS
+        from langchain.embeddings.dashscope import DashScopeEmbeddings
+
+        from langchain_text_splitters import CharacterTextSplitter
+        
+        # 实例化向量嵌入器
+        embeddings = DashScopeEmbeddings()
+        
+        # 初始化缓存存储器
+        store = LocalFileStore("./cache/")
+        
+        # 创建缓存支持的嵌入器
+        cached_embedder = CacheBackedEmbeddings.from_bytes_store( embeddings, store, namespace=embeddings.model)
+        
+        # 加载文档并将其拆分成片段
+        doc = TextLoader(file_name,encoding='utf-8').load()
+        spliter = CharacterTextSplitter("\n",chunk_size=200, chunk_overlap=0)
+        chunks = spliter.split_documents(doc)
+        # 创建向量存储
+        # db = FAISS.from_documents(chunks, cached_embedder)
+        faissdb.add(chunks,'movielist')
+        return Response({"code":200})
+    
+    def post(self,request):
+        ask = "电影"
+        res = faissdb.search(ask,'movielist',4)
+       
+        prompt = "请帮我从以下{res}中返回三部电影的名称和请求地址,返回格式转成json格式返回,返回格式转成json格式返回,只返回json数据，不要任务描述信息"
+        promptTemplate = PromptTemplate.from_template(prompt)
+        # 生成prompt
+        prompt = promptTemplate.format(res=res)
+        tongyi = Tongyi()
+        ret = tongyi.invoke(prompt)
+        data = json.loads(ret)
+        print(data)
+        return Response({"code":200,'data':data})
+~~~
+
+
+
+~~~
+1.从百度文库下载pdf、word文档，教育  requests.get  豆瓣
+2.以数据进行处理，用正则或者xpath提取电影名称和地址，存入Json文件
+3.加载文档，分隔，向量化处理，写入FAISS数据库
+4.写一个vue页面，输入电影标题，点击搜索
+5.查询向量数据库，获取信息，调用大模型处理返回结果
+~~~
+
 ![](/Users/hanxiaobai/Library/Application Support/typora-user-images/image-20240613155956292.png)
 
 以下是构建这样一个 RAG 项目的步骤：

@@ -4,12 +4,40 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import *
 from tools.textload import getdoc
-
+import os
 # Create your views here.
+from tools.faissdb import faissdb
 
 class Test(APIView):
     def get(self,request):
-        # data = getdoc('/Users/hanxiaobai/Downloads/dxb/h2405a/llmpro/tools/1.md')
+        
+        from bs4 import BeautifulSoup
+        res = requests.get('https://movie.douban.com/',headers={"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"})
+        html = res.text
+        soup = BeautifulSoup(html, 'html.parser')
+
+        movies = []
+
+        for review in soup.find_all('div', class_='review'):
+            movie_link_tag = review.find('div', class_='review-hd').find('a')
+            movie_title_tag = review.find('div', class_='review-meta').find_all('a')[-1]
+            
+            movie_url = movie_link_tag['href']
+            movie_name = movie_title_tag.text.strip().replace('《', '').replace('》', '')
+            
+            movies.append({'电影名称': movie_name, 'url': movie_url})
+            
+        # 指定文件名
+        file_name = './static/upload/movie.json'
+
+        # 使用 with 语句确保文件正确关闭
+        with open(os.path.join(file_name), 'w', encoding='utf-8') as file:
+            # 使用 json.dump 将 Python 对象转换为 JSON 格式并写入文件
+            json.dump(movies, file, ensure_ascii=False, indent=4)
+
+        print(f"数据已成功写入 {file_name} 文件")
+        
+        # data = getdoc(file_name)
         # print(data)
         # 导入所需的模块和类
         from langchain.embeddings import CacheBackedEmbeddings
@@ -30,16 +58,33 @@ class Test(APIView):
         cached_embedder = CacheBackedEmbeddings.from_bytes_store( embeddings, store, namespace=embeddings.model)
         
         # 加载文档并将其拆分成片段
-        doc = TextLoader("/Users/hanxiaobai/Downloads/dxb/h2405a/llmpro/tools/1.txt",encoding='utf-8').load()
+        doc = TextLoader(file_name,encoding='utf-8').load()
         spliter = CharacterTextSplitter("\n",chunk_size=200, chunk_overlap=0)
         chunks = spliter.split_documents(doc)
         # 创建向量存储
-        db = FAISS.from_documents(chunks, cached_embedder)
-        res = db.similarity_search("NBA冠军球队是哪个", k=3)
-        print(res)
-        prompt = "用户的问题是{ask},现在有的内容是{answer},请根据问题返回与问题相关的答案，对语句优化处理"
+        # db = FAISS.from_documents(chunks, cached_embedder)
+        faissdb.add(chunks,'movielist')
+        return Response({"code":200})
+    
+    def post(self,request):
+        ask = "电影"
+        res = faissdb.search(ask,'movielist',4)
+       
+        prompt = "请帮我从以下{res}中返回三部电影的名称和请求地址,返回格式转成json格式返回,返回格式转成json格式返回,只返回json数据，不要任务描述信息"
+        promptTemplate = PromptTemplate.from_template(prompt)
+        # 生成prompt
+        prompt = promptTemplate.format(res=res)
+        tongyi = Tongyi()
+        ret = tongyi.invoke(prompt)
+        data = json.loads(ret)
+        print(data)
+        return Response({"code":200,'data':data})
         
-        return Response({"code":200,'mes':'success'})
+class TestFasiss(APIView):
+    def get(self,request):
+        res = requests.post("http://localhost:8000/test/")
+        # print(res.json())
+        return Response({"code":200})
     
 
 import random
@@ -47,6 +92,7 @@ from http import HTTPStatus
 # 建议dashscope SDK 的版本 >= 1.14.0
 from dashscope import Generation
 import requests
+from tools.faissdb import faissdb
 
 #把message存入redis,post中重构message，从redis中获取message
 from http import HTTPStatus    
@@ -664,3 +710,9 @@ class TestSMM(APIView):
         
         return Response({"code":200})
     
+import requests  
+class MovieData(APIView):
+    def get(self,request):
+        res = requests.get('https://movie.douban.com/',headers={"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"})
+        print(res.text)
+        return Response({"code":200})

@@ -33,5 +33,7 @@ urlpatterns = [
     path('catesall/',Catesall.as_view()),
     path('ddurl/',DDUrl.as_view()),
     path('ddcallback/',DDcallback.as_view()),
-    path('testSMM/',TestSMM.as_view())
+    path('testSMM/',TestSMM.as_view()),
+    path("movieData/",MovieData.as_view()),
+    path('testFasiss/',TestFasiss.as_view())
 ]
