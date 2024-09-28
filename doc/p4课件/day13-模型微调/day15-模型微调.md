@@ -34,15 +34,13 @@ pip install "peft<0.8.0" deepspeed
 
 **## 微调**
 
-准备模型：Qwen-7B-Chat
+准备模型：Qwen-1_8B-Chat
 
 准备训练数据:trans_data.json
 
 \```
 
 cd Qwen
-
-
 
 \# 移动finetune_lora_single_gpu.sh到外面
 

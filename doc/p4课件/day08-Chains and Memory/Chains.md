@@ -873,6 +873,28 @@ memory.load_memory_variables({})
   
 ```
 
+保存消息记录
+
+您可能经常需要保存消息，并在以后使用时加载它们。可以通过将消息首先转换为普通的 Python 字典来轻松实现此操作，然后将其保存（例如，保存为 JSON 格式），然后再加载。以下是一个示例：
+
+```python
+import json
+
+from langchain.memory import ChatMessageHistory
+from langchain.schema import messages_from_dict, messages_to_dict
+
+history = ChatMessageHistory()
+
+history.add_user_message("hi!")
+
+history.add_ai_message("whats up?")
+dicts = messages_to_dict(history.messages)
+
+new_messages = messages_from_dict(dicts)
+new_messages
+   
+```
+
 在链中使用
 
 最后，让我们看看如何在链中使用这个模块（设置 `verbose=True` 以便查看提示）。
@@ -896,30 +918,51 @@ conversation = ConversationChain(
     # verbose=True, 
     memory=memory
 )
-conversation.predict(input="我感觉头晕，眼花，不想吃东西怎么办")
+conversation.predict(input="我感觉头晕，眼花，不想吃东西怎么办,请你回答时叫我的名字")
 ```
 
-保存消息记录
+#### 8.8.2 prompt和memory
 
-您可能经常需要保存消息，并在以后使用时加载它们。可以通过将消息首先转换为普通的 Python 字典来轻松实现此操作，然后将其保存（例如，保存为 JSON 格式），然后再加载。以下是一个示例：
+~~~python
+import random
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
 
-```python
-import json
+# 初始化 ConversationBufferMemory
+memory = ConversationBufferMemory()
 
-from langchain.memory import ChatMessageHistory
-from langchain.schema import messages_from_dict, messages_to_dict
+class MemoryTest(APIView):
+    def get(self,request):
+        
+        llm = Tongyi()
 
-history = ChatMessageHistory()
+        # 定义 Prompt 模板
+        template = """这是一个成语接龙的游戏，用户输入一个成语，ai根据成语的最后一个字再组成一个成语。用户再根据
+        ai的成语最后一个字输入成语，如果用户输入错误，提示用户游戏结果
+        User: {input}
+        AI: """
 
-history.add_user_message("hi!")
+        prompt = PromptTemplate(input_variables=["history", "input"], template=template)
 
-history.add_ai_message("whats up?")
-dicts = messages_to_dict(history.messages)
+        # 初始化 LLMChain
+        chain = LLMChain(llm=llm, prompt=prompt, memory=memory)
+    
+        user_input = request.GET.get('mes')
+        memory.chat_memory.add_user_message(user_input)
+        
+        # 将用户输入和 AI 响应添加到对话历史记录中
+        res = chain.run(input=user_input)
+        memory.chat_memory.add_ai_message(res)
+        print(memory)
+        return Response({"code":200,'res':res})
+~~~
 
-new_messages = messages_from_dict(dicts)
-new_messages
-   
-```
+### 综合案例
+
+~~~
+需求请你设计一下成语接龙的游戏，用户输入一个成语，ai根据这个成语的最后一个字生成一个新的成语，用户再根据ai成语的最后一个字输入一个新成语。如果输入的是其他问题，先回答用户的问题，回答完用户问题后提醒用户，我们现在在玩成语接龙的游戏，请你出一个新的成语我们开始吧，添加memory记忆功能，所有的输出采用流式输出。vue页面显示完整的聊天内容
+~~~
 
 
 

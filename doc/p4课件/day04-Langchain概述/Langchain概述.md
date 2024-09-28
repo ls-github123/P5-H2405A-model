@@ -201,6 +201,8 @@ print(ret)
 
 ### 综合案例
 
+需求分析，评价模块实现，写一个prompt定义A:好评  B:中评 C:差评，写一个用户订单系统，对支付成功的商品进行评价，对评价内容进行分层，确定是好评中评还是差评写入数据库
+
 ~~~
 评价模块
 计算机基础
@@ -224,8 +226,6 @@ python基础  评价
 id  userid  courseid   cotent  level
 
 ~~~
-
-
 
 #### 1.2.3 ChatPromptTemplate
 

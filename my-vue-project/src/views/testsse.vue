@@ -23,9 +23,7 @@ export default {
 
       eventSource.onmessage = (event) => {
         this.messages.push(event.data);
-        if (this.messages.length > 10) {
-          this.messages.shift(); // 保持最多10条消息
-        }
+       
       };
 
       eventSource.onerror = (error) => {

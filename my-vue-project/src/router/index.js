@@ -6,8 +6,13 @@ import rag from '../views/rag.vue'
 import userinfo from '../views/userinfo.vue'
 import updatetoken from '../views/updatetoken.vue'
 import fileupload from '../views/fileupload.vue'
+import testsse from '../views/testsse.vue'
 
 const routes = [{
+        path: '/testsse',
+        name: 'testsse',
+        component: testsse
+    }, {
         path: '/fileupload',
         name: 'fileupload',
         component: fileupload

@@ -795,3 +795,97 @@ class FileUpload(APIView):
         # 检查分割后的文本数量
         print(res)
         return Response({"code":200})
+    
+    
+def generate_sse_lc(chunks):
+   
+    for chunk in chunks:
+        data = f"data: {chunk}\n\n"
+        if chunk:
+            yield data.encode('utf-8')
+        else:
+            print('____________')
+            return 'no mes'
+        
+            
+from django.http import StreamingHttpResponse
+from django.views.decorators.http import require_GET           
+
+@require_GET
+def sse_notifications(request):
+        query_text = request.GET.get('ask')  # 调用函数获取用户输入 
+    
+        # 实例化模板类
+        pp = "帮我返回{res}中答案"
+       
+        promptTemplate = PromptTemplate.from_template(pp)
+        prompt = promptTemplate.format(res=query_text)
+         
+            
+        llm=Tongyi()
+   
+        chuns = llm.stream(prompt)
+                   
+        response = StreamingHttpResponse(
+            generate_sse_lc(chuns),
+            content_type="text/event-stream",
+        )
+        response["Cache-Control"] = "no-cache"
+        return response
+    
+
+import random
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
+
+# 初始化 ConversationBufferMemory
+memory = ConversationBufferMemory()
+
+class MemoryTest(APIView):
+    def get(self,request):
+        
+        llm = Tongyi()
+
+        # 定义 Prompt 模板
+        template = """这是一个成语接龙的游戏，用户输入一个成语，ai根据成语的最后一个字再组成一个成语。用户再根据
+        ai的成语最后一个字输入成语，如果用户输入错误，提示用户游戏结果
+        User: {input}
+        AI: """
+
+        prompt = PromptTemplate(input_variables=["history", "input"], template=template)
+
+        # 初始化 LLMChain
+        chain = LLMChain(llm=llm, prompt=prompt, memory=memory)
+    
+        user_input = request.GET.get('mes')
+        memory.chat_memory.add_user_message(user_input)
+        
+        # 将用户输入和 AI 响应添加到对话历史记录中
+        res = chain.run(input=user_input)
+        memory.chat_memory.add_ai_message(res)
+        print(memory)
+        return Response({"code":200,'res':res})
+
+
+from langchain_community.llms import Tongyi
+from langchain.chains import ConversationChain
+from langchain.memory import ConversationBufferMemory
+
+memory = ConversationBufferMemory()
+#多轮对话
+class AskMessage(APIView):
+    def post(self,request):
+        ask = request.data['ask']
+        memory.chat_memory.add_user_message(ask)
+        memory.load_memory_variables({})
+        
+        llm = Tongyi(temperature=0)
+        conversation = ConversationChain(
+            llm=llm, 
+            # verbose=True, 
+            memory=memory
+        )
+        res = conversation.predict(input=ask)
+        memory.chat_memory.add_ai_message(res)
+        return Response({"code":200,'mes':res})

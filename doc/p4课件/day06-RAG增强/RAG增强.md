@@ -24,6 +24,151 @@
 
 ## **三、本单元知识详讲**
 
+### 5.2流式调用
+
+#### 5.2.1流式调用概念
+
+大模型的流式输出方法主要涉及到在模型生成答案的过程中，以流的形式将结果逐步输出给用户，而不是等待整个答案生成完成后再一次性输出。这种流式输出的方法有助于提高用户体验，尤其是在处理大规模数据和生成长文本时
+
+#### 5.2.2案例实现
+
+~~~python
+from langchain_community.llms import Tongyi  
+
+# 初始化 Tongyi 模型  
+tongyi = Tongyi()    
+  
+inputmes = "请写一首关于春天的诗"  
+  
+stream = tongyi.stream(inputmes)  # 注意，我假设 prompt 是正确的参数名，而不是 promt  
+  
+for chunk in stream:  
+    print(chunk)  # 假设 chunk 对象有一个 text 属性，这取决于 Tongyi 的返回类型
+
+
+~~~
+
+#### 5.2.4 综合案例
+
+vue代码
+
+~~~
+<template>
+  <div id="app">
+    <h1>Server-Sent Events Example</h1>
+    <ul>
+      <li v-for="(message, index) in messages" :key="index">{{ message }}</li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      messages: []
+    };
+  },
+  mounted() {
+    this.connectToSSE();
+  },
+  methods: {
+    connectToSSE() {
+      const eventSource = new EventSource('http://localhost:8000/sse/?ask=小米是谁');
+
+      eventSource.onmessage = (event) => {
+        this.messages.push(event.data);
+       
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('EventSource failed:', error);
+        eventSource.close();
+      };
+    }
+  }
+};
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+~~~
+
+django代码
+
+~~~python
+def generate_sse_lc(chunks):
+    print("####")
+    for chunk in chunks:
+        data = f"data: {chunk}\n\n"
+        if chunk:
+            yield data.encode('utf-8')
+        else:
+            print('____________')
+            return 'no mes'
+        
+            
+from django.http import StreamingHttpResponse
+from django.views.decorators.http import require_GET           
+
+@require_GET
+def sse_notifications(request):
+        query_text = request.GET.get('ask')  # 调用函数获取用户输入 
+    
+        # 实例化模板类
+        pp = "帮我返回{res}中答案"
+       
+        promptTemplate = PromptTemplate.from_template(pp)
+        prompt = promptTemplate.format(res=query_text)
+         
+            
+        llm=Tongyi()
+   
+        chuns = llm.stream(prompt)
+                   
+        response = StreamingHttpResponse(
+            generate_sse_lc(chuns),
+            content_type="text/event-stream",
+        )
+        response["Cache-Control"] = "no-cache"
+        return response
+
+~~~
+
+
+
+### 5.3token跟踪
+
+#### 5.3.1 概述
+
+在LLM（大型语言模型）中，Token追踪的概念并不直接等同于传统的资产追踪或位置追踪。但在LLM的语境下，Token是模型进行语言处理的基本信息单元，它代表了模型可以理解和生成的最小意义单位。关于LLM的Token追踪，我们可以从以下几个方面进行理解：
+
+1. Token的定义
+   - Token是大语言模型（LLM）进行语言处理的最小单元，它可以是一个字、一个词，甚至是一个短语或句子的一部分。
+   - Token在不同的上下文中可能会有不同的划分粒度，这取决于所使用的特定标记化（Tokenization）方案。
+2. Token的追踪意义
+   - 在LLM中，Token的追踪并不是指追踪某个具体的Token的物理位置或来源，而是指模型如何处理、理解和生成这些Token。
+   - 当用户与LLM进行交互时，输入的文本会被转换为一系列的Token，这些Token随后被模型用于生成预测或回答。
+3. Token的数量与关系
+   - 一个Token的大致长度可以用字符或单词来估算。例如，在英语中，一个Token大约等于4个字符，而在中文中，一个Token可能对应于¾个单词（这是一个粗略的估算）。
+   - 模型的性能通常与其能够处理的Token数量有关。一些模型具有MAX TOKENS的参数，这限制了模型在一次会话中能够基于整个上下文记忆的Token数量。
+4. Token与向量
+   - Token在LLM中通常与向量相关联，这些向量代表了Token的特征或语义信息。
+   - 相同的Token在不同的上下文中可能会有不同的特征向量，这取决于其在整个文本中的角色和含义。
+5. Token在LLM中的作用
+   - Token作为原始文本数据和LLM可以使用的数字表示之间的桥梁，确保了文本的连贯性和一致性。
+   - LLM使用Token来理解和生成文本，有效地处理各种任务，如写作、翻译和回答查询。
+
+综上所述，LLM的Token追踪更多地是指模型如何处理、理解和生成这些基本的语言单元，而不是物理上追踪某个Token的位置或来源。
+
+#### 
+
 ### 5.1 RAG增强检索
 
 #### 5.1.1 RAG增强检索概念
@@ -178,55 +323,7 @@ docs = loader.load()
 print(docs)
 ~~~
 
-### 5.2流式调用
 
-#### 5.2.1流式调用概念
-
-大模型的流式输出方法主要涉及到在模型生成答案的过程中，以流的形式将结果逐步输出给用户，而不是等待整个答案生成完成后再一次性输出。这种流式输出的方法有助于提高用户体验，尤其是在处理大规模数据和生成长文本时
-
-#### 5.2.2案例实现
-
-~~~python
-from langchain_community.llms import Tongyi  
-
-# 初始化 Tongyi 模型  
-tongyi = Tongyi()    
-  
-inputmes = "请写一首关于春天的诗"  
-  
-stream = tongyi.stream(inputmes)  # 注意，我假设 prompt 是正确的参数名，而不是 promt  
-  
-for chunk in stream:  
-    print(chunk)  # 假设 chunk 对象有一个 text 属性，这取决于 Tongyi 的返回类型
-
-
-~~~
-
-### 5.3token跟踪
-
-#### 5.3.1 概述
-
-在LLM（大型语言模型）中，Token追踪的概念并不直接等同于传统的资产追踪或位置追踪。但在LLM的语境下，Token是模型进行语言处理的基本信息单元，它代表了模型可以理解和生成的最小意义单位。关于LLM的Token追踪，我们可以从以下几个方面进行理解：
-
-1. Token的定义
-   - Token是大语言模型（LLM）进行语言处理的最小单元，它可以是一个字、一个词，甚至是一个短语或句子的一部分。
-   - Token在不同的上下文中可能会有不同的划分粒度，这取决于所使用的特定标记化（Tokenization）方案。
-2. Token的追踪意义
-   - 在LLM中，Token的追踪并不是指追踪某个具体的Token的物理位置或来源，而是指模型如何处理、理解和生成这些Token。
-   - 当用户与LLM进行交互时，输入的文本会被转换为一系列的Token，这些Token随后被模型用于生成预测或回答。
-3. Token的数量与关系
-   - 一个Token的大致长度可以用字符或单词来估算。例如，在英语中，一个Token大约等于4个字符，而在中文中，一个Token可能对应于¾个单词（这是一个粗略的估算）。
-   - 模型的性能通常与其能够处理的Token数量有关。一些模型具有MAX TOKENS的参数，这限制了模型在一次会话中能够基于整个上下文记忆的Token数量。
-4. Token与向量
-   - Token在LLM中通常与向量相关联，这些向量代表了Token的特征或语义信息。
-   - 相同的Token在不同的上下文中可能会有不同的特征向量，这取决于其在整个文本中的角色和含义。
-5. Token在LLM中的作用
-   - Token作为原始文本数据和LLM可以使用的数字表示之间的桥梁，确保了文本的连贯性和一致性。
-   - LLM使用Token来理解和生成文本，有效地处理各种任务，如写作、翻译和回答查询。
-
-综上所述，LLM的Token追踪更多地是指模型如何处理、理解和生成这些基本的语言单元，而不是物理上追踪某个Token的位置或来源。
-
-#### 5.3.2案例
 
 ### 5.4文档分割
 

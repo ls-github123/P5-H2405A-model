@@ -25,7 +25,7 @@ urlpatterns = [
     # path('sse/',sse_view),
     path('toolsView/',ToolsView.as_view()),
     path('toolsCall/',ToolsCall.as_view()),
-    path('sse/',sse_views),
+    # path('sse/',sse_views),
     path('echartssse/',echartssse),
     path('randromCount/',RandromCount.as_view()),
     path('cates/',CatesView.as_view()),
@@ -36,5 +36,8 @@ urlpatterns = [
     path('testSMM/',TestSMM.as_view()),
     path("movieData/",MovieData.as_view()),
     path('testFasiss/',TestFasiss.as_view()),
-    path('fileUpload/',FileUpload.as_view())
+    path('fileUpload/',FileUpload.as_view()),
+    path('sse/',sse_notifications),
+    path('memoryTest/',MemoryTest.as_view()),
+    path('askMessage/',AskMessage.as_view())
 ]

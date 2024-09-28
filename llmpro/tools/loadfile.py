@@ -38,7 +38,7 @@ class TextLoad():
         from langchain_community.document_loaders import JSONLoader
 
         loader = JSONLoader(
-            file_path = path,jq_schema=".template",text_content=True
+            file_path = path,jq_schema=".template",text_content=True,
         )
         data = loader.load()
         return data
