@@ -38,6 +38,6 @@ urlpatterns = [
     path('testFasiss/',TestFasiss.as_view()),
     path('fileUpload/',FileUpload.as_view()),
     path('sse/',sse_notifications),
-    path('memoryTest/',MemoryTest.as_view()),
+    path('memoryTest/',qustions_ask),
     path('askMessage/',AskMessage.as_view())
 ]

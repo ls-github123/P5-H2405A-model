@@ -842,30 +842,40 @@ from langchain.prompts import PromptTemplate
 # 初始化 ConversationBufferMemory
 memory = ConversationBufferMemory()
 
-class MemoryTest(APIView):
-    def get(self,request):
+@require_GET
+def qustions_ask(request):
+        user_input = request.GET.get('ask')
+        memory.chat_memory.add_user_message(user_input)
         
         llm = Tongyi()
 
         # 定义 Prompt 模板
-        template = """这是一个成语接龙的游戏，用户输入一个成语，ai根据成语的最后一个字再组成一个成语。用户再根据
-        ai的成语最后一个字输入成语，如果用户输入错误，提示用户游戏结果
+        template = """请你设计一下成语接龙的游戏，用户输入一个成语,模型用最后一字生成一个新的成语，新成语的第一个字是上一个成语的最后一个字
+        如果用户输入的是其他问题，先回答问题再提醒用户玩成语接龙游戏
         User: {input}
         AI: """
 
-        prompt = PromptTemplate(input_variables=["history", "input"], template=template)
+        prompt = PromptTemplate(input_variables=["history","input"], template=template)
 
         # 初始化 LLMChain
         chain = LLMChain(llm=llm, prompt=prompt, memory=memory)
-    
-        user_input = request.GET.get('mes')
-        memory.chat_memory.add_user_message(user_input)
+       
         
         # 将用户输入和 AI 响应添加到对话历史记录中
         res = chain.run(input=user_input)
         memory.chat_memory.add_ai_message(res)
-        print(memory)
-        return Response({"code":200,'res':res})
+       
+       
+        chuns = llm.stream(res)
+                   
+        response = StreamingHttpResponse(
+            generate_sse_lc(chuns),
+            content_type="text/event-stream",
+        )
+        response["Cache-Control"] = "no-cache"
+        return response
+    
+       
 
 
 from langchain_community.llms import Tongyi
@@ -881,11 +891,19 @@ class AskMessage(APIView):
         memory.load_memory_variables({})
         
         llm = Tongyi(temperature=0)
-        conversation = ConversationChain(
-            llm=llm, 
-            # verbose=True, 
-            memory=memory
-        )
-        res = conversation.predict(input=ask)
+        
+         # 定义 Prompt 模板
+        template = """这是一个成语接龙的游戏，用户输入一个成语，ai根据成语的最后一个字再组成一个成语。用户再根据
+        ai的成语最后一个字输入成语，如果用户输入错误，提示用户游戏结果
+        User: {input}
+        AI: """
+
+        prompt = PromptTemplate(input_variables=["history", "input"], template=template)
+
+        chain = LLMChain(llm=llm, prompt=prompt, memory=memory)
+        
+        res = chain.predict(input=ask)
         memory.chat_memory.add_ai_message(res)
+        
+        
         return Response({"code":200,'mes':res})

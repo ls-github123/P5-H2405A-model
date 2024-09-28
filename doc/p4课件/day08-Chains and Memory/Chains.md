@@ -964,6 +964,111 @@ class MemoryTest(APIView):
 需求请你设计一下成语接龙的游戏，用户输入一个成语，ai根据这个成语的最后一个字生成一个新的成语，用户再根据ai成语的最后一个字输入一个新成语。如果输入的是其他问题，先回答用户的问题，回答完用户问题后提醒用户，我们现在在玩成语接龙的游戏，请你出一个新的成语我们开始吧，添加memory记忆功能，所有的输出采用流式输出。vue页面显示完整的聊天内容
 ~~~
 
+代码实现
+
+~~~vue
+<template>
+  <div id="app">
+    <h1>Server-Sent Events Example</h1>
+    <ul>
+      <li v-for="(message, index) in messages" :key="index">{{ message }}</li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      messages: []
+    };
+  },
+  mounted() {
+    this.connectToSSE();
+  },
+  methods: {
+    connectToSSE() {
+      const eventSource = new EventSource('http://localhost:8000/memoryTest/?ask=小米是谁');
+
+      eventSource.onmessage = (event) => {
+        this.messages.push(event.data);
+       
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('EventSource failed:', error);
+        eventSource.close();
+      };
+    }
+  }
+};
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+~~~
+
+~~~python
+
+def generate_sse_lc(chunks):
+   
+    for chunk in chunks:
+        data = f"data: {chunk}\n\n"
+        if chunk:
+            yield data.encode('utf-8')
+        else:
+            print('____________')
+            return 'no mes'
+            
+import random
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
+
+# 初始化 ConversationBufferMemory
+memory = ConversationBufferMemory()
+
+@require_GET
+def qustions_ask(request):
+        
+        llm = Tongyi()
+
+        # 定义 Prompt 模板
+        template = """这是一个成语接龙的游戏，用户输入一个成语，ai根据成语的最后一个字再组成一个成语。用户再根据
+        ai的成语最后一个字输入成语，如果用户输入错误，提示用户游戏结果
+        User: {input}
+        AI: """
+
+        prompt = PromptTemplate(input_variables=["history", "input"], template=template)
+
+        # 初始化 LLMChain
+        chain = LLMChain(llm=llm, prompt=prompt, memory=memory)
+       
+        user_input = request.GET.get('ask')
+       
+        memory.chat_memory.add_user_message(user_input)
+        
+        # 将用户输入和 AI 响应添加到对话历史记录中
+        res = chain.run(input=user_input)
+        memory.chat_memory.add_ai_message(res)
+       
+       
+        chuns = llm.stream(res)
+                   
+        response = StreamingHttpResponse(
+            generate_sse_lc(chuns),
+            content_type="text/event-stream",
+        )
+        response["Cache-Control"] = "no-cache"
+        return response
+~~~
+
 
 
 ## **四、本单元知识总结**

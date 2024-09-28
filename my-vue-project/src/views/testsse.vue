@@ -11,7 +11,8 @@
 export default {
   data() {
     return {
-      messages: []
+      messages: [],
+      mes:this.$route.query.mes
     };
   },
   mounted() {
@@ -19,7 +20,8 @@ export default {
   },
   methods: {
     connectToSSE() {
-      const eventSource = new EventSource('http://localhost:8000/sse/?ask=小米是谁');
+      alert(this.mes)
+      const eventSource = new EventSource('http://localhost:8000/memoryTest/?ask='+this.mes);
 
       eventSource.onmessage = (event) => {
         this.messages.push(event.data);

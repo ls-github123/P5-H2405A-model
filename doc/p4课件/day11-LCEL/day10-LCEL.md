@@ -42,7 +42,7 @@ LCEL的特征：
 
 案例
 
-~~~
+~~~python
 from langchain_community.llms.tongyi import Tongyi
 from langchain_community.chat_models.tongyi import ChatTongyi
 
@@ -59,7 +59,54 @@ output_parser = StrOutputParser()
 chain = prompt | llm | output_parser
 
 chain.invoke({"topic": "冰激凌"})
+
+llm.invoke(prompt.format(topic="冰激凌"))
 ~~~
+
+#### 10.1.2 执行流程
+
+| 符号类似于 unix 管道操作符，它将不同的组件链接在一起，将一个组件的输出作为下一个组件的输入。
+
+在这个链条中，用户输入被传递给提示模板，然后提示模板的输出被传递给大模型，然后模型的输出被传递给输出解析器。下面逐个组件地看一下，以真正理解发生了什么。
+
+Prompt
+
+prompt 是一个 BasePromptTemplate，这意味着它接受一个模板变量的字典并生成一个 PromptValue。PromptValue 是一个包装完成的提示的包装器，可以传递给 LLM（它以字符串作为输入）或 ChatModel（它以消息序列作为输入）。它可以与任何语言模型类型一起使用，因为它定义了生成 BaseMessage 和生成字符串的逻辑。
+
+~~~
+prompt_value = prompt.invoke({"topic": "冰激凌"})
+prompt_value
+~~~
+
+~~~
+prompt_value.to_messages()
+~~~
+
+~~~
+prompt_value.to_string()
+~~~
+
+**model**
+
+然后将 PromptValue 传递给 model。在这种情况下，我们的 model 是一个 ChatModel，这意味着它将输出一个 BaseMessage。
+
+**Output parser**
+
+ Output parser的输入BaseMessage，输出是结果字符串
+
+~~~
+output_parser.invoke(message)
+~~~
+
+
+
+
+
+
+
+
+
+
 
 
 
