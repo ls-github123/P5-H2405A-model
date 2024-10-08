@@ -98,15 +98,462 @@ prompt_value.to_string()
 output_parser.invoke(message)
 ~~~
 
+### 10.2 **RAG Search Exampl**
+
+不包括文档加载，分割等功能。
+
+\- 建立向量数据
+
+\- 使用RAG增强
+
+~~~python
+
+from operator import itemgetter
+
+from langchain_community.vectorstores import FAISS
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough,RunnableParallel
+from langchain_community.embeddings.dashscope import DashScopeEmbeddings
+
+vectorstore = FAISS.from_texts(
+    ["张三在北京工作,工资是3000每月"], embedding=DashScopeEmbeddings()
+)
+retriever = vectorstore.as_retriever()
+
+template = """根据下面的内容回答问题:
+{context}
+
+问题: {question}
+"""
+prompt = ChatPromptTemplate.from_template(template)
+
+chain = (
+    RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
+    | prompt
+    | llm
+    | StrOutputParser()
+)
+
+chain.invoke(input="张三在哪工资挣多少钱")
+~~~
+
+### 10.3 自定义输入变量
+
+~~~python
+template = """请使用{language}，根据下面的内容回答问题:
+{context}
+
+问题: {question}
+"""
+
+prompt = ChatPromptTemplate.from_template(template)
+
+chain = (
+    {
+        "context": itemgetter("question") | retriever,
+        "question": itemgetter("question"),
+        "language": itemgetter("language"),
+    }
+    | prompt
+    | llm
+    | StrOutputParser()
+)
+
+chain.invoke({"question": "张三在哪工作", "language": "英文"})
+~~~
+
+### 10.4流式响应
+
+~~~python
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.chat_models.tongyi import ChatTongyi
+
+
+chat = ChatTongyi()
+
+prompt = ChatPromptTemplate.from_template("给我讲一个关于{topic}的笑话")
+
+
+chain = prompt | chat
+
+
+for s in chain.stream({"topic": "熊"}):
+    print(s.content, end="", flush=True)
+~~~
+
+batch同步
+
+~~~
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.chat_models.tongyi import ChatTongyi
+
+
+chat = ChatTongyi()
+
+prompt = ChatPromptTemplate.from_template("给我讲一个关于{topic}的笑话")
+
+
+chain = prompt | chat 
+
+print(chain.batch([{"topic": "熊"}, {"topic": "猫"}, {"topic": "狗"}]))
+~~~
+
+### 10.5并发支持
+
+并发批处理，适用于大量生成
+
+使用RunnableParallel类
+
+~~~python
+from langchain_core.runnables import RunnableParallel
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.llms.tongyi import Tongyi
+
+llm = Tongyi()
+
+chain1 = ChatPromptTemplate.from_template("给我讲一个关于{topic}的笑话") | llm
+chain2 = ChatPromptTemplate.from_template("写一篇关于{topic}的诗歌") | llm
+combined = RunnableParallel(joke=chain1, poem=chain2)
+
+
+print(combined.invoke([{"topic": "熊"}, {"topic": "猫"}]))
+~~~
+
+### 10.6典型用法
+
+#### 10.6.1 Prompt+LLM
+
+基本构成：
+
+PromptTemplate / ChatPromptTemplate -> LLM / ChatModel -> OutputParser
+
+~~~python
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.llms.tongyi import Tongyi
+
+llm = Tongyi()
+
+prompt = ChatPromptTemplate.from_template("给我讲一个关于{topic}的笑话")
+
+# 标准用法
+chain = prompt | llm
+print(chain.invoke({"topic": "狗熊"}))
+
+# 加入停止符
+chain = prompt | llm.bind(stop=["\n"])
+chain.invoke({"topic": "狗熊"})
+
+# 加入function_call
+
+functions = [
+    {
+        "name": "joke",
+        "description": "讲笑话",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "setup": {"type": "string", "description": "笑话的开头"},
+                "punchline": {"type": "string","description": "爆梗的结尾"},
+            },
+            "required": ["setup", "punchline"],
+        },
+    }
+]
+chain = prompt | llm.bind(function_call={"name": "joke"}, functions=functions)
+print(chain.invoke({"topic": "狗熊"}))
+~~~
+
+#### **Prompt+LLM+OutputParser**
+
+~~~python
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.llms.tongyi import Tongyi
+
+llm = Tongyi()
+
+prompt = ChatPromptTemplate.from_template("给我讲一个关于{topic}的笑话")
+
+
+from langchain_core.output_parsers import StrOutputParser
+
+chain = prompt | llm | StrOutputParser()
+print(chain.invoke({"topic": "狗熊"}))
+~~~
+
+#### **## Chains+Chains**
 
 
 
+一个链的输出作为下一个链的输入
+
+**### 使用Runnables来连接多链结构**
+
+以下3个方式是等效的，功能就是取输入中的变量的值
+
+{"context": retriever, "question": RunnablePassthrough()}
+
+RunnableParallel(context=retriever, question=RunnablePassthrough())
+
+RunnableParallel({"context": retriever, "question": RunnablePassthrough()})
+
+下面的语句功能也是取输入中的变量的值
+
+itemgetter("question") # 取输入的变量
+
+~~~python
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.llms.tongyi import Tongyi
+
+llm = Tongyi()
+
+from operator import itemgetter #获取可迭代对象中指定索引或键对应的元素
+
+from langchain.schema import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+
+prompt1 = ChatPromptTemplate.from_template("{person}来自于哪个城市?")
+prompt2 = ChatPromptTemplate.from_template("{city}属于哪个省? 用{language}来回答")
+
+chain1 = prompt1 | llm | StrOutputParser()
+
+chain2 = (
+    {"city": chain1, "language": itemgetter("language")} #获取invoke中的language
+    | prompt2
+    | llm
+    | StrOutputParser()
+)
+print(chain1.invoke({"person": "马云"}))
+print(chain2.invoke({"person": "马云", "language": "中文"}))
+~~~
+
+#### **### 多链执行与结果合并**
+
+​      输入
+
+​      / \
+
+​     /   \
+
+ 分支1   分支2
+
+​     \   /
+
+​      \ /
+
+​    合并结果
+
+~~~python
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.llms.tongyi import Tongyi
+from langchain.schema import StrOutputParser
+
+llm = Tongyi()
+from langchain_core.runnables import RunnablePassthrough
+
+prompt1 = ChatPromptTemplate.from_template(
+    "生成一个{attribute}属性的颜色。除了返回这个颜色的名字不要做其他事:"
+)
+prompt2 = ChatPromptTemplate.from_template(
+    "什么水果是这个颜色:{color},只返回这个水果的名字不要做其他事情:"
+)
+prompt3 = ChatPromptTemplate.from_template(
+    "哪个国家的国旗有这个颜色:{color},只返回这个国家的名字不要做其他事情:"
+)
+prompt4 = ChatPromptTemplate.from_template(
+    "请问{country}有{fruit}吗？"
+)
+
+model_parser = llm | StrOutputParser()
+
+# 生成一个颜色
+chain_color_generator = {"attribute": RunnablePassthrough()} | prompt1 | {"color": model_parser}
+
+chain_color_to_fruit = prompt2 | model_parser
+chain_color_to_country = prompt3 | model_parser
+
+chain_question_generator = chain_color_generator | {"fruit": chain_color_to_fruit, "country": chain_color_to_country} | prompt4
+prompt = chain_question_generator.invoke("红色")
+prompt.to_string()
+chain = chain_question_generator | llm | StrOutputParser()
+print(chain.invoke("红色"))
+~~~
+
+案例2
+
+~~~
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.llms.tongyi import Tongyi
+from langchain.schema import StrOutputParser
+from operator import itemgetter
+
+llm = Tongyi()
+
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough,RunnableParallel
 
 
 
+planner = (
+    ChatPromptTemplate.from_template("生成一个关于{input}的论点")
+    | llm
+    | StrOutputParser()
+    | {"base_response": RunnablePassthrough()}
+)
+
+arguments_for = (
+    ChatPromptTemplate.from_template(
+        "列出以下内容的优点或积极方面:{base_response}"
+    )
+    | llm
+    | StrOutputParser()
+)
+arguments_against = (
+    ChatPromptTemplate.from_template(
+        "列出以下内容的缺点或消极方面:{base_response}"
+    )
+    | llm
+    | StrOutputParser()
+)
+
+final_responder = (
+    ChatPromptTemplate.from_messages(
+        [
+            ("ai", "{original_response}"),
+            ("human", "积极:\n{results_1}\n\n消极:\n{results_2}"),
+            ("system", "根据评论生成最终的回复"),
+        ]
+    )
+    | llm
+    | StrOutputParser()
+)
+
+chain = (
+    planner
+    | {
+        "results_1": arguments_for,
+        "results_2": arguments_against,
+        "original_response": itemgetter("base_response"),
+    }
+    | final_responder
+)
+
+print(planner.invoke("是否有外星人"))
+
+pp = (planner
+    | {
+        "results_1": arguments_for,
+        "results_2": arguments_against,
+        "original_response": itemgetter("base_response"),
+    })
+print(pp.invoke("是否有外星人"))
+print(chain.invoke({"input": "是否有外星人"}))
+~~~
+
+#### Memory
+
+~~~python
 
 
+from langchain_community.llms.tongyi import Tongyi
+llm = Tongyi()
 
+
+from operator import itemgetter
+
+from langchain.memory import ConversationBufferMemory
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", "你是一个乐于助人的机器人"),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{input}"),
+    ]
+)
+memory = ConversationBufferMemory(return_messages=True)
+memory.load_memory_variables({})
+
+chain = (
+    RunnablePassthrough.assign(
+        history=RunnableLambda(memory.load_memory_variables) | itemgetter("history")
+    )
+    | prompt
+    | llm
+)
+
+inputs = {"input": "你好我是张三"}
+response = chain.invoke(inputs)
+
+#保存记忆
+memory.save_context(inputs, {"output": response})
+memory.load_memory_variables({})
+
+inputs = {"input": "我叫什么名字?"}
+response = chain.invoke(inputs)
+print(response)
+~~~
+
+#### agent案例
+
+~~~python
+
+
+from langchain_community.llms.tongyi import Tongyi
+llm = Tongyi()
+
+from langchain import hub
+from langchain.agents import AgentExecutor, tool
+from langchain.agents.output_parsers import XMLAgentOutputParser
+
+#可用工具
+@tool
+def search(query: str) -> str:
+    """当需要了解最新的天气信息的时候才会使用这个工具。"""
+    return "晴朗,32摄氏度,无风"
+tool_list = [search]
+tool_list
+
+#提示词模版
+# https://smith.langchain.com/hub
+# Get the prompt to use - you can modify this!
+prompt = hub.pull("hwchase17/xml-agent-convo")
+
+def convert_intermediate_steps(intermediate_steps):
+    log = ""
+    for action, observation in intermediate_steps:
+        log += (
+            f"<tool>{action.tool}</tool><tool_input>{action.tool_input}"
+            f"</tool_input><observation>{observation}</observation>"
+        )
+    return log
+
+#将工具列表插入到模版中
+def convert_tools(tools):
+    return "\n".join([f"{tool.name}: {tool.description}" for tool in tools])
+
+# 定义agent
+agent = (
+    {
+        "input": lambda x: x["input"],
+        "agent_scratchpad": lambda x: convert_intermediate_steps(
+            x["intermediate_steps"]
+        ),
+    }
+    | prompt.partial(tools=convert_tools(tool_list))
+    | llm.bind(stop=["</tool_input>", "</final_answer>"])
+    | XMLAgentOutputParser()
+)
+
+#执行agent
+agent_executor = AgentExecutor(agent=agent, tools=tool_list, verbose=True)
+
+print(agent_executor.invoke({"input": "北京今天的天气如何?"}))
+~~~
 
 
 

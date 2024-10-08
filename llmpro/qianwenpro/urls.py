@@ -39,5 +39,6 @@ urlpatterns = [
     path('fileUpload/',FileUpload.as_view()),
     path('sse/',sse_notifications),
     path('memoryTest/',qustions_ask),
-    path('askMessage/',AskMessage.as_view())
+    path('askMessage/',AskMessage.as_view()),
+    path('upload/',FUPload.as_view())
 ]

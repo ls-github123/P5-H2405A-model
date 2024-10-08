@@ -24,6 +24,7 @@ export default {
       const eventSource = new EventSource('http://localhost:8000/memoryTest/?ask='+this.mes);
 
       eventSource.onmessage = (event) => {
+        console.log(event.data)
         this.messages.push(event.data);
        
       };

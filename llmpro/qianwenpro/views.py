@@ -907,3 +907,59 @@ class AskMessage(APIView):
         
         
         return Response({"code":200,'mes':res})
+    
+
+from langchain_community.document_loaders import TextLoader    
+
+def orders_search(input:str)->str:
+    #查询faiss
+    
+    return "订单号为"+input+"商品已发货，时间为2023-10-10"
+
+def doctor_search(input:str)->str:
+    #查询医生表
+    return input +"是一个非常优秀的医生"
+def faq(input:str)->str:
+    #查询faiss
+    print("input:"+input)
+    res = faissdb.search(input,'ffile',1)
+    return res
+
+from langchain.agents import initialize_agent,Tool
+from langchain.agents import AgentType
+
+class FUPload(APIView):
+    def post(self,request):
+        file = request.FILES['file']
+        path = "./static/upload/"+file.name
+        
+        with open(os.path.join(path),'wb') as f:
+            for i in file.chunks():
+                f.write(i)
+                
+        # 加载文档并将其拆分成片段
+        doc = TextLoader(path,encoding='utf-8').load()
+        spliter = CharacterTextSplitter("\n",chunk_size=200, chunk_overlap=0)
+        chunks = spliter.split_documents(doc)
+        faissdb.add(chunks,'ffile')
+        return Response({"code":200})
+    def get(self,request):
+        # res = faissdb.search("你今年多大了",'ffile',1)
+        
+        #模拟问电商faq
+        question = request.GET.get('ask')
+        tools=[
+            Tool(name="search order",func=orders_search,
+            description = "当用户咨询关于订单的问题用这个工具回答,从问答中截取订单号，只取订单号后面的号码"),
+            Tool(name="doctor search",func=doctor_search,
+            description = "当用户咨询关于医生的问题请用这个工具回答"),
+            Tool(name="faq",func=faq,
+            description = "当用户其他问题的时候请用这个工具回答"),
+        ]
+        llm = Tongyi()
+        agent = initialize_agent(tools,llm,agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,verbose=True)
+        res = agent.invoke(question)
+        print(res)
+        return Response({"code":200,'mes':res})
+                
+        
