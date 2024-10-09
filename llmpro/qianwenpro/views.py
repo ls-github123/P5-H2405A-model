@@ -1024,5 +1024,16 @@ class TestFaiss(APIView):
         res = db.similarity_search("我是谁", k=3)
         print(res)
         return Response({"code":200,'mes':res})
-                
+
+
+
+
+
+               
+class TestBd(APIView):
+    def get(self,request):
+        mes = request.GET.get('mes')
         
+        return Response({"code":200,'data':data['conclusion']})
+    
+

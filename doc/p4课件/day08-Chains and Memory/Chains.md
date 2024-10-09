@@ -459,6 +459,33 @@ with open("doc/NBA新闻.txt",encoding='utf-8') as f:
 squential_chain.invoke(letters)
 ~~~
 
+### 用户发布模块
+
+~~~
+用户发布动态，系统审核，审核通过后显示
+百度人工智能平台-》审核
+1.vue页面，用户输入发布信息
+2.获取到发布信息-》调用百度人工智能平台敏感词过滤
+3.对敏词处理-》写入发布表，审核状态（1没审核  2通过  3通过）
+4.显示页面
+
+qps限制问题
+1.百度企业账号qps 10，
+2.队列解决 redis list
+3.把任务放到队列中
+4.celery启一个定时任务，每秒执行一次，一次取10个处理，处理完异步更新到数据库
+~~~
+
+百度开放平台注册
+
+https://qianfan.cloud.baidu.com/?track=56a2658099dba724c98ea24abdff90718ec8ffb931f2295f
+
+创建应用
+
+https://console.bce.baidu.com/ai/?_=1728455908238#/ai/antiporn/app/list
+
+
+
 ### 8.7 四种文档处理链
 
 ####  8.7.1 StuffDocumentsChain

@@ -623,7 +623,7 @@ fibonacci_sequence
 
 #### 9.3.7 SQL Database
 
-使用SQLDatabaseChain构建的agent，用来根据数据库回答一般行动饿问题
+使用SQLDatabaseChain构建的agent，用来根据数据库回答一般行动问题
 
 ~~~
 from langchain.agents import create_sql_agent
@@ -690,7 +690,7 @@ s.serpapi.run("python")
 
 案例
 
-~~~
+~~~python
 from langchain.agents import Tool, tool, AgentExecutor, LLMSingleActionAgent, AgentOutputParser
 from langchain.prompts import StringPromptTemplate
 from langchain import SerpAPIWrapper, LLMChain
@@ -853,7 +853,7 @@ myagent.run("2024年NBA冠军球队是哪只?")
 # tool.search("2024年NBA冠军球队是哪只")
 ~~~
 
-~~~
+~~~python
 from langchain.agents import initialize_agent, AgentType
 
 agent = initialize_agent(

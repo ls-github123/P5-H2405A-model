@@ -196,6 +196,7 @@ def faq(input:str)->str:
     """
     当你需要回答关于商品问题的时候使用，比如咨询等问题
     """
+    
     return faq_chain.run(input)
 
 #查询关于订单的问题
@@ -317,6 +318,7 @@ def search_order(input:str)->str:
 
 #查询关于推荐产品
 def recommend_product(input:str)->str:
+  
     return "裙子"
 
 
@@ -353,8 +355,43 @@ print(memory)
    
 5.加上memory，重构memory，提取信息
    
-   
+message = ref([])
+
+submit =()=>{
+		const mes = {"ask":"用户说:"+mes,'answer':''}
+		http.post().then(res=>{
+			mes['answer'] = "ai说："+res.data.mes
+		
+		})
+		message.value.push(mes)
+}
+
+<ul>
+	<li v-for="i in message"> {{i.ask}}{{i.answer}}</li>
+</ul>
 ~~~
+
+客服机器人
+
+在线咨询->点击-》输入框-》我想了解一下上衣-》推荐系统
+
+​                                             订单-》订单系统
+
+​                                             物流-》物流系统
+
+​                                              其他问题-》查询faiss（问答系统获取数据处理）
+
+电影豆瓣
+
+1.requests爬取电影名称，评分，链接，介绍，电影对应的评价
+
+2.bs4或者xpath解析数据，把电影的基本信息存入mysql数据库，电影评论信息存入向量数据库{"id":1,"name":"电影名","comment":['','','']}
+
+3.写一个vue页面，问答-》输入问题
+
+​        1.查看详情，查询电影信息返回电影名称和id,点击详情进入详情页面，显示所有信息
+
+​        2.查看电影评论，第二个tools查询向量数据库，处理成json返回
 
 
 

@@ -613,6 +613,18 @@ Faiss向量数据库，实际上是Facebook AI Research团队开源的一个高�
 
 pip3 install faiss-cpu
 
+1.获取文档
+
+2.加载文档
+
+3.文档切割
+
+4.向量化处理存入向量数据库
+
+5.从向量数据库中查询
+
+
+
 ~~~python
 # 导入所需的模块和类
 from langchain.embeddings import CacheBackedEmbeddings
@@ -638,6 +650,9 @@ spliter = CharacterTextSplitter("\n",chunk_size=200, chunk_overlap=0)
 chunks = spliter.split_documents(doc)
  # 创建向量存储
 db = FAISS.from_documents(chunks, cached_embedder)
+#以索引的方式保存
+db.save_local(key)
+db = FAISS.load_local(key,self.cached_embedder,allow_dangerous_deserialization=True)
 res = db.similarity_search("NBA冠军球队是哪个", k=3)
 print(res)
 ~~~
