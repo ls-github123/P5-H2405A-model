@@ -800,9 +800,9 @@ class FileUpload(APIView):
 def generate_sse_lc(chunks):
    
     for chunk in chunks:
-        data = f"data: {chunk}\n\n"
+        data = f"{chunk}"
         if chunk:
-            yield data.encode('utf-8')
+            yield data.encode('gbk')
         else:
             print('____________')
             return 'no mes'
@@ -927,7 +927,24 @@ def faq(input:str)->str:
 
 from langchain.agents import initialize_agent,Tool
 from langchain.agents import AgentType
+memory = ConversationBufferMemory(memory_key='chat_history',return_message=True)
 
+from langchain.callbacks.base import BaseCallbackHandler
+
+class StreamingCallbackHandler(BaseCallbackHandler):
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        # 每当从语言模型接收到新token时调用
+        print("###")
+        print(token, end='', flush=True)
+
+    def on_tool_start(self, serialized, input_str, **kwargs) -> None:
+        # 当工具开始执行时调用
+        print(f"开始执行工具: {input_str}")
+
+    def on_tool_end(self, output, **kwargs) -> None:
+        # 当工具结束执行时调用
+        print(f"工具执行完成: {output}")
+        
 class FUPload(APIView):
     def post(self,request):
         file = request.FILES['file']
@@ -954,11 +971,57 @@ class FUPload(APIView):
             Tool(name="doctor search",func=doctor_search,
             description = "当用户咨询关于医生的问题请用这个工具回答"),
             Tool(name="faq",func=faq,
-            description = "当用户其他问题的时候请用这个工具回答"),
+            description = "当用户问除了订单和医生的其他咨询问题，比如年龄等问题都用这个工具回答"),
         ]
         llm = Tongyi()
-        agent = initialize_agent(tools,llm,agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,verbose=True)
+        agent = initialize_agent(tools,llm,
+                                 agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+                                 memory=memory,
+                                verbose=True)
         res = agent.invoke(question)
+        
+        data = llm.stream(res['output'])
+        
+        response = StreamingHttpResponse(
+            generate_sse_lc(data),
+            content_type="text/event-stream",
+        )
+        response["Cache-Control"] = "no-cache"
+        return response
+        
+        # return Response({"code":200,'mes':res})
+        
+        
+class TestFaiss(APIView):
+    def get(self,request):
+        # 导入所需的模块和类
+        from langchain.embeddings import CacheBackedEmbeddings
+        from langchain.storage import LocalFileStore
+        from langchain_community.document_loaders import TextLoader
+        from langchain_community.vectorstores import FAISS
+        from langchain.embeddings.dashscope import DashScopeEmbeddings
+
+        from langchain_text_splitters import CharacterTextSplitter
+        
+        # 实例化向量嵌入器
+        embeddings = DashScopeEmbeddings()
+        
+        # 初始化缓存存储器
+        store = LocalFileStore("./cache/")
+        
+        # 创建缓存支持的嵌入器
+        cached_embedder = CacheBackedEmbeddings.from_bytes_store( embeddings, store, namespace=embeddings.model)
+        
+        # 加载文档并将其拆分成片段
+        # doc = TextLoader("./static/upload/a.txt",encoding='utf-8').load()
+        # spliter = CharacterTextSplitter("\n",chunk_size=200, chunk_overlap=0)
+        # chunks = spliter.split_documents(doc)
+        # # 创建向量存储
+        # db = FAISS.from_documents(chunks, cached_embedder)
+        #以索引的方式保存
+        # db.save_local("testfaiss")
+        db = FAISS.load_local("testfaiss",cached_embedder,allow_dangerous_deserialization=True)
+        res = db.similarity_search("我是谁", k=3)
         print(res)
         return Response({"code":200,'mes':res})
                 
