@@ -1108,19 +1108,23 @@ class TestBd(APIView):
         )
 
         res = squential_chain.invoke(mes)
+       
+        
         if res  == "内容不合法":
             return Response({"code":10010,'data':res})
         else:
             #写入发布表
             return Response({"code":200,'data':res})
     
-
+import random
+from tools.mredis import mredis
 class PublishView(APIView):
     def post(self,request):
         #获取参数
         #写入发布表
         # publish = Publish
         # #把生成id加入队列
-        # r.list_add('dblist',publish.id)
+        code = str(random.randint(1000,9999))
+        mredis.list_add('dblist',code)
         #返回结果
         return Response({"code":200})

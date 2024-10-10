@@ -27,6 +27,6 @@ class BDapi():
         if data['conclusion'] == '合规':
             return mes
         else:
-            return "内容不合法"
+            return '1'
         
 bdapi = BDapi()

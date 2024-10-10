@@ -605,6 +605,180 @@ qps限制问题
 
 ~~~
 
+celery配制
+
+### 1.celery介绍
+
+~~~
+celery是一个异步任务框架，没有队列。redis,rabbitmq
+
+task  产生任务     
+beat  定时任务配制
+broker  任务调用器，将任务放入队列
+worker  监听队列变化，执行任务
+backend  将任务结果存入到结果队列中
+~~~
+
+<img src="images/26.png">
+
+~~~
+list1=[4,5,6,7,8]
+
+list2=[7,8]
+1,2,3
+
+4
+更新订单表
+查询 4对应的订单的状态
+update set status=2
+更新积分
+del
+~~~
+
+~~~
+pip uninstall celery
+pip intall -U celery
+~~~
+
+2.在settings中配制
+
+~~~python
+# Celery配置
+# from kombu import Exchange, Queue
+# 设置任务接受的类型，默认是{'json'}
+CELERY_ACCEPT_CONTENT = ['application/json']
+# 设置task任务序列列化为json
+CELERY_TASK_SERIALIZER = 'json'
+# 请任务接受后存储时的类型
+CELERY_RESULT_SERIALIZER = 'json'
+# 时间格式化为中国时间
+CELERY_TIMEZONE = 'Asia/Shanghai'
+# 是否使用UTC时间
+CELERY_ENABLE_UTC = False
+# 指定borker为redis 如果指定rabbitmq CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+# 指定存储结果的地方，支持使用rpc、数据库、redis等等，具体可参考文档 # CELERY_RESULT_BACKEND = 'db+mysql://scott:tiger@localhost/foo' # mysql 作为后端数据库
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/1'
+# 设置任务过期时间 默认是一天，为None或0 表示永不过期
+CELERY_TASK_RESULT_EXPIRES = 60 * 60 * 24
+# 设置worker并发数，默认是cpu核心数
+# CELERYD_CONCURRENCY = 12
+# 设置每个worker最大任务数
+CELERYD_MAX_TASKS_PER_CHILD = 100
+
+
+# 指定任务的位置
+CELERY_IMPORTS = (
+    'base.tasks',
+)
+# 使用beat启动Celery定时任务
+# schedule时间的具体设定参考：https://docs.celeryproject.org/en/stable/userguide/periodic-tasks.html
+CELERYBEAT_SCHEDULE = {
+    'getbaidu-1-seconds': {
+        'task': 'base.tasks.getbaidu',
+        'schedule': 1,
+        
+    },
+   'getbaidu-1-seconds': {
+        'task': 'base.tasks.getbaidu',
+        'schedule': 3,
+        
+    },
+}
+
+~~~
+
+在settings同级目录下新celery.py
+
+~~~python
+# from __future__ import absolute_import, unicode_literals
+import os
+from celery import Celery, platforms
+
+
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mall.settings')
+app = Celery('mall',broker='redis://127.0.0.1:6379/1',  # 任务存放的地方 
+             backend='redis://127.0.0.1:6379/15')
+
+app.config_from_object('django.conf:settings')
+
+app.autodiscover_tasks()
+
+platforms.C_FORCE_ROOT = True
+
+
+~~~
+
+在settings同级目录__init__.py中
+
+~~~python
+# from __future__ import absolute_import, unicode_literals
+
+# This will make sure the app is always imported when
+# Django starts so that shared_task will use this app.
+from .celery import app as celery_app
+
+__all__ = ('celery_app',)
+
+~~~
+
+在项目目录下创建base文件夹，在base下新建tasks.py文件
+
+~~~
+# from __future__ import absolute_import, unicode_literals
+from celery import shared_task
+import time
+from tools.mredis import mredis
+from tools.bdapi import bdapi
+# 1导入prompt的类
+from langchain.prompts import PromptTemplate
+# 导入通义大模型
+from langchain_community.llms import Tongyi
+
+@shared_task
+def getbaidu():
+   print("调用百度api接口")
+   #每秒执行一次从队列中读取5条数据处理，调用百度接口，根据结果做业务操作，更新表的状态
+   ids = mredis.list_lrange('dblist',0,4)
+   for i in ids:
+       print(i)
+       code = i.decode()
+       publish = Publish.objects.filter(id=code).first()
+       res = bdapi.audit_mes(publish.content)
+       if res == '1':
+           Publish.objects.filter(id=code).update(status=3)
+       else:
+            # 定义一个模板
+            pp = "对文章{mes}进行优化处理"
+            # 实例化模板类
+            promptTemplate = PromptTemplate.from_template(pp)
+            # 生成prompt
+            prompt = promptTemplate.format(mes=publish.content)
+
+            # 实例化通义大模型
+            tongyi = Tongyi()
+            ret = tongyi.invoke(prompt)
+            Publish.objects.filter(id=code).update(status=2,content=ret)
+        mredis.list_lrem('dblist',code)
+       
+       
+
+
+~~~
+
+启动任务
+
+~~~
+启动worker
+celery -A llmpro  worker -l info
+
+windows下启动 worker
+celery -A mall  worker -l info -P eventlet 
+启动定时beat
+celery -A medical beat -l info 
+~~~
+
 
 
 ### 8.7 四种文档处理链
