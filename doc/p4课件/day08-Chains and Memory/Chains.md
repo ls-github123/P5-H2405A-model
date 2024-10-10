@@ -476,6 +476,8 @@ qps限制问题
 4.celery启一个定时任务，每秒执行一次，一次取10个处理，处理完异步更新到数据库
 ~~~
 
+![image-20241009162804435](images/image-20241009162804435.png)
+
 百度开放平台注册
 
 https://qianfan.cloud.baidu.com/?track=56a2658099dba724c98ea24abdff90718ec8ffb931f2295f
@@ -483,6 +485,125 @@ https://qianfan.cloud.baidu.com/?track=56a2658099dba724c98ea24abdff90718ec8ffb93
 创建应用
 
 https://console.bce.baidu.com/ai/?_=1728455908238#/ai/antiporn/app/list
+
+百度api封装
+
+~~~python
+import requests,json
+class BDapi():
+    def __init__(self) -> None:
+        self.API_KEY = "tDGnh7BmUWauc0xocyfmG4qS"
+        self.SECRET_KEY = "onMC9tZvQwrxdM2Dv1iEnTzeLsIC7ivS"
+    def get_access_token(self):
+        """
+        使用 AK，SK 生成鉴权签名（Access Token）
+        :return: access_token，或是None(如果错误)
+        """
+        url = "https://aip.baidubce.com/oauth/2.0/token"
+        params = {"grant_type": "client_credentials", "client_id": self.API_KEY, "client_secret": self.SECRET_KEY}
+        return str(requests.post(url, params=params).json().get("access_token"))
+    
+    def audit_mes(self,mes):
+        url = "https://aip.baidubce.com/rest/2.0/solution/v1/text_censor/v2/user_defined?access_token=" + self.get_access_token()
+        
+        payload='text='+mes
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+        }
+        
+        response = requests.request("POST", url, headers=headers, data=payload)
+        data = json.loads(response.text)
+       
+        if data['conclusion'] == '合规':
+            return mes
+        else:
+            return "内容不合法"
+        
+bdapi = BDapi()
+~~~
+
+代码实现
+
+~~~python
+from tools.bdapi import bdapi
+from langchain.chains.llm import LLMChain
+from langchain_community.llms import Tongyi
+
+llm = Tongyi()
+from langchain.prompts import PromptTemplate
+from langchain.chains.llm import LLMChain
+from langchain.chains.transform import TransformChain
+from langchain.chains.sequential import SimpleSequentialChain
+
+
+ # 第一个任务
+def transform_func(inputs:dict) -> dict:
+    text = inputs["text"]
+    mes=bdapi.audit_mes(text)
+    return {"output_text":mes}
+               
+class TestBd(APIView):
+    def get(self,request):
+        mes = request.GET.get('mes')
+
+        #文档转换链
+        transform_chain = TransformChain(
+            input_variables=["text"],
+            output_variables=["output_text"],
+            transform=transform_func
+        )
+
+        # 第二个任务
+        template = """对下面的文字进行处理:
+        如果内容为内容不合法直接返回这几个字，如果是别的
+        内容请对内容做优化处理后返回,返回时只返回内容不返回描述信息,内容为
+        {output_text}
+
+        # # """
+        # template = """对下面的文字进行总结:
+        # {output_text}
+
+        # 总结:"""
+
+        prompt = PromptTemplate(
+            input_variables=["output_text"],
+            template=template
+        )
+        llm_chain = LLMChain(
+            llm = Tongyi(),
+            prompt=prompt
+        )
+
+        #使用顺序链连接起来
+        squential_chain = SimpleSequentialChain(
+            chains=[transform_chain,llm_chain],
+            verbose=True
+        )
+
+        res = squential_chain.invoke(mes)
+        return Response({"code":200,'data':res})
+~~~
+
+qps限制问题
+
+~~~
+每秒能处理的请求数
+5qps，20qps
+队列、锁
+队列：每个请求都不一样，都需要处理，用队列解决,数据结构，先进先出
+锁：所有用户的请求返回的结果是一样的
+队列：异步、削峰、解耦
+问题：任务重复消费、任务丢失
+~~~
+
+实现步骤
+
+~~~
+1.接口中获取到发布内容，发布内容存入队列中，写入发布表，审核状态为1（等待审核）
+2.celery定时任务，每秒执行一次从队列中读取5条数据处理，调用百度接口，根据结果做业务操作，更新表的状态
+
+~~~
 
 
 
@@ -753,6 +874,7 @@ MapRerankDocumentsChain 和 MapReduceDocumentsChain 类似，先通过 LLM 对�
 
 ~~~python
 from langchain.chains.combine_documents.map_reduce import MapReduceDocumentsChain
+from langchain_community.document_loaders import TextLoader
 from langchain.chains.combine_documents.reduce import ReduceDocumentsChain
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain.prompts import PromptTemplate

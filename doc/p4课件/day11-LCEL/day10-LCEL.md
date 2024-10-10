@@ -60,7 +60,7 @@ chain = prompt | llm | output_parser
 
 chain.invoke({"topic": "冰激凌"})
 
-llm.invoke(prompt.format(topic="冰激凌"))
+
 ~~~
 
 #### 10.1.2 执行流程

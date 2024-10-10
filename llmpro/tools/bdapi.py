@@ -30,5 +30,3 @@ class BDapi():
             return "内容不合法"
         
 bdapi = BDapi()
-# mes = bdapi.audit_mes("我是中国人")
-# print(mes)

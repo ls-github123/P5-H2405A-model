@@ -330,21 +330,44 @@ def generate_sse(responses):
             else:
                 return "no mes"
     
-     
+
+def generate_sse_lcc(chunks):
+       
+    for chunk in chunks:
+        data = f"{chunk.content}"
+        if chunk:
+            yield data.encode('gbk')
+        else:
+            print('____________')
+            return 'no mes'
 @require_GET
 def sse_view(request):
-    user_input = request.GET.get('ask')  # 调用函数获取用户输入   
-    messages.append({'role': 'user', 'content': user_input})  
+    # user_input = request.GET.get('ask')  # 调用函数获取用户输入   
+    # messages.append({'role': 'user', 'content': user_input})  
 
-    responses = Generation.call(model="qwen-turbo",  
-                            messages=messages,  
-                            result_format='message',
-                            stream=True,  # 设置输出方式为流式输出
-                            incremental_output=True  # 增量式流式输出
-                            ) 
+    # responses = Generation.call(model="qwen-turbo",  
+    #                         messages=messages,  
+    #                         result_format='message',
+    #                         stream=True,  # 设置输出方式为流式输出
+    #                         incremental_output=True  # 增量式流式输出
+    #                         ) 
+    from langchain_core.prompts import ChatPromptTemplate
+    from langchain_community.chat_models.tongyi import ChatTongyi
+
+
+    chat = ChatTongyi()
+
+    prompt = ChatPromptTemplate.from_template("给我讲一个关于{topic}的笑话")
+
+
+    chain = prompt | chat
+
+
+    res = chain.stream({"topic": "熊"})
+
    
     response = StreamingHttpResponse(
-        generate_sse(responses),
+        generate_sse_lcc(res),
         content_type="text/event-stream",
     )
     response["Cache-Control"] = "no-cache"
@@ -811,6 +834,7 @@ def generate_sse_lc(chunks):
 from django.http import StreamingHttpResponse
 from django.views.decorators.http import require_GET           
 
+
 @require_GET
 def sse_notifications(request):
         query_text = request.GET.get('ask')  # 调用函数获取用户输入 
@@ -1028,12 +1052,75 @@ class TestFaiss(APIView):
 
 
 
+from tools.bdapi import bdapi
+from langchain.chains.llm import LLMChain
+from langchain_community.llms import Tongyi
 
+llm = Tongyi()
+from langchain.prompts import PromptTemplate
+from langchain.chains.llm import LLMChain
+from langchain.chains.transform import TransformChain
+from langchain.chains.sequential import SimpleSequentialChain
+
+
+ # 第一个任务
+def transform_func(inputs:dict) -> dict:
+    text = inputs["text"]
+    mes=bdapi.audit_mes(text)
+    return {"output_text":mes}
                
 class TestBd(APIView):
     def get(self,request):
         mes = request.GET.get('mes')
-        
-        return Response({"code":200,'data':data['conclusion']})
+
+        #文档转换链
+        transform_chain = TransformChain(
+            input_variables=["text"],
+            output_variables=["output_text"],
+            transform=transform_func
+        )
+
+        # 第二个任务
+        template = """对下面的文字进行处理:
+        如果内容为内容不合法直接返回这几个字，如果是别的
+        内容请对内容做优化处理后返回,返回时只返回内容不返回描述信息,内容为
+        {output_text}
+
+        # # """
+        # template = """对下面的文字进行总结:
+        # {output_text}
+
+        # 总结:"""
+
+        prompt = PromptTemplate(
+            input_variables=["output_text"],
+            template=template
+        )
+        llm_chain = LLMChain(
+            llm = Tongyi(),
+            prompt=prompt
+        )
+
+        #使用顺序链连接起来
+        squential_chain = SimpleSequentialChain(
+            chains=[transform_chain,llm_chain],
+            verbose=True
+        )
+
+        res = squential_chain.invoke(mes)
+        if res  == "内容不合法":
+            return Response({"code":10010,'data':res})
+        else:
+            #写入发布表
+            return Response({"code":200,'data':res})
     
 
+class PublishView(APIView):
+    def post(self,request):
+        #获取参数
+        #写入发布表
+        # publish = Publish
+        # #把生成id加入队列
+        # r.list_add('dblist',publish.id)
+        #返回结果
+        return Response({"code":200})
