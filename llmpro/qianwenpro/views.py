@@ -1128,3 +1128,26 @@ class PublishView(APIView):
         mredis.list_add('dblist',code)
         #返回结果
         return Response({"code":200})
+    
+    def get(self,request):
+        file_name = "/Users/hanxiaobai/Downloads/dxb/h2405a/llmpro/qianwenpro/a.txt"
+        doc = TextLoader(file_name,encoding='utf-8').load()
+        spliter = CharacterTextSplitter("\n",chunk_size=5, chunk_overlap=0)
+        chunks = spliter.split_documents(doc)
+       
+        # faissdb.add(chunks,'llindex')
+        res = faissdb.search('电影','llindex',3)
+        # 定义一个模板
+        pp = "对以下内容进行处理，以json格式返回内容。只返回json数据,不返回描述信息,也不返回json这个单词，内容为{mes}"
+        # 实例化模板类
+        promptTemplate = PromptTemplate.from_template(pp)
+        # 生成prompt
+        prompt = promptTemplate.format(mes=res)
+
+        # 实例化通义大模型
+        tongyi = Tongyi()
+        ret = tongyi.invoke(prompt)
+        data = json.loads(ret)
+        print(data)
+        return Response({"code":200})
+        

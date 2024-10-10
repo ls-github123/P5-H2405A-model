@@ -42,5 +42,6 @@ urlpatterns = [
     path('askMessage/',AskMessage.as_view()),
     path('upload/',FUPload.as_view()),
     path('testFaiss/',TestFaiss.as_view()),
-    path('testBd/',TestBd.as_view())
+    path('testBd/',TestBd.as_view()),
+    path('publishView/',PublishView.as_view())
 ]
