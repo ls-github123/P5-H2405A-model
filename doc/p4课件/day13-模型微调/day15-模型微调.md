@@ -26,21 +26,39 @@
 
 git clone https://github.com/QwenLM/Qwen.git
 
+cd Qwen
+
 git clone https://www.modelscope.cn/qwen/Qwen-1_8B-Chat.git
 
 
 
 \# 安装依赖
 
-cd Qwen
-
 pip install -r requirements.txt
 
 pip install -r requirements_web_demo.txt
 
+python web_demo.py  -c=Qwen-1_8B-Chat
+
+
+
+
+
 \# 安装torch
 
-pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu117
+\# 安装torch
+
+```
+pip install torch torchvision torchaudio
+```
+
+方法1
+
+下载地址：http://download.pytorch.org/whl/torch_stable.html
+
+wget http://download.pytorch.org/whl/cu121/torch/torch-2.1.1+cu121-cp310-cp310-linux_x86_64.whl
+
+pip install torch-2.1.1+cu121-cp310-cp310-linux_x86_64.whl
 
 \# 安装deepspeed
 
@@ -74,7 +92,7 @@ vim finetune_lora_single_gpu.sh
 
 Model  /mnt/workspace/Qwen/Qwen-1_8B-Chat 
 
-data  /mnt/workspace/data/trans_data.json
+data  /mnt/workspace/Qwen/data/trans_data.json
 
 修改完执行
 
@@ -89,6 +107,8 @@ pip install --upgrade transformers
 pip install tf-keras
 
 pip install --upgrade transformers accelerate
+
+
 
 \# 合并模型，模型合并文件 qwen_lora_merge.py，上传到Qwen文件夹里，然后修改微调模型路径
 
@@ -112,7 +132,9 @@ python cli_demo.py -c Qwen-1_8B-Chat
 
 \```
 
-\```
+```
+
+```
 
 \# 启动服务
 
