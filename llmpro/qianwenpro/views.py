@@ -1150,4 +1150,44 @@ class PublishView(APIView):
         data = json.loads(ret)
         print(data)
         return Response({"code":200})
+    
+from django.db.models import Sum  
+from datetime import datetime,timedelta
+
+from django.core.mail import send_mail  
+from llmpro import settings
+def send_email_view(mail):  
+    subject = '测试邮件主题'  
+    message = '这是测试邮件的内容。'  
+    from_email = settings.EMAIL_HOST_USER  # 可以是 settings.py 中的 EMAIL_FROM  
+    to_email = [mail]  # 收件人邮箱地址列表  
+  
+    # 发送邮件  
+    send_status = send_mail(subject, message, from_email, to_email, fail_silently=False)  
+    print(send_status)
+    return send_status
+    
+class CrmManager(APIView):
+    def get(self,request):
+        # 按客户分组并计算每个客户的总订单金额  
+        # now = datetime.now()
+        # pre = now - timedelta(days=9)
+        # print(pre)
+        # cates = Cates.objects.filter(add_time__lt=now,add_time__gt=pre).values('userid').annotate(total_amount=Sum('numbers')).order_by('total_amount')
+        # for i in cates:
+        #     print(i)
+        # send_email_view("763005825@qq.com")
+        
+        end = datetime.now()
+        #查询本月
+        start = datetime.strftime(end,'%Y-%m-01')
+        print(start)
+        #30天前
+        start = end - timedelta(days=30)
+        # select sum(number) as tcount  from cates group by userid  order by tcount desc limit 0,10;
+        cates = Cates.objects.filter(add_time__gte=start,add_time__lte=end).values("userid").annotate(tmoney=Sum('numbers')).order_by('-tmoney')[0:10]
+        print(cates)
+        return Response({"code":200}) 
+
+        
         

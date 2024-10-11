@@ -43,5 +43,6 @@ urlpatterns = [
     path('upload/',FUPload.as_view()),
     path('testFaiss/',TestFaiss.as_view()),
     path('testBd/',TestBd.as_view()),
-    path('publishView/',PublishView.as_view())
+    path('publishView/',PublishView.as_view()),
+    path('crmManager/',CrmManager.as_view())
 ]

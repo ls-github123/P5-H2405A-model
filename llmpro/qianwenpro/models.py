@@ -15,6 +15,8 @@ class Cates(models.Model):
     # code = models.CharField(max_length=10,primary_key=True)
     name = models.CharField(max_length=50,null=True,blank=True)  
     add_time = models.DateTimeField(auto_now_add=True)
+    numbers = models.IntegerField()
+    userid = models.IntegerField()
     
     
 class Questions(models.Model):

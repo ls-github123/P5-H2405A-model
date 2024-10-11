@@ -65,6 +65,7 @@ llm = Tongyi()
 #查询关于订单的问题
 def search_order(input:str)->str:
     #查询订单表上个月1号到今天总价格在10000以上的用户
+    #orders  money  userid  add_time  
     #查询商品价格在10000以上并且销量排名前10
     #给用户发邮件
 
@@ -91,6 +92,53 @@ tools=[
 agent = initialize_agent(tools,llm,agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,verbose=True)
 res = agent.invoke("查询订单，订单号为1001")
 print(res)
+~~~
+
+发送邮件功能
+
+1.settings中的配制
+
+~~~
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'
+EMAIL_PORT = 25
+#发送邮件的邮箱
+EMAIL_HOST_USER = '18210208326@163.com'
+#在邮箱中设置的客户端授权密码
+EMAIL_HOST_PASSWORD = 'JZiJ6JbUgzfgt7s3'
+#收件人看到的发件人
+EMAIL_FROM = 'A公司<18210208326@163.com>'
+~~~
+
+2.发送代码
+
+~~~
+from django.core.mail import send_mail  
+from llmpro import settings
+def send_email_view(mail):  
+    subject = '测试邮件主题'  
+    message = '这是测试邮件的内容。'  
+    from_email = settings.EMAIL_HOST_USER  # 可以是 settings.py 中的 EMAIL_FROM  
+    to_email = [mail]  # 收件人邮箱地址列表  
+  
+    # 发送邮件  
+    send_status = send_mail(subject, message, from_email, to_email, fail_silently=False)  
+    print(send_status)
+    return send_status
+    
+class CrmManager(APIView):
+    def get(self,request):
+        # 按客户分组并计算每个客户的总订单金额  
+        # now = datetime.now()
+        # pre = now - timedelta(days=9)
+        # print(pre)
+        # cates = Cates.objects.filter(add_time__lt=now,add_time__gt=pre).values('userid').annotate(total_amount=Sum('numbers')).order_by('total_amount')
+        # for i in cates:
+        #     print(i)
+        send_email_view("763005825@qq.com")
+        return Response({"code":200}) 
+
 ~~~
 
 
