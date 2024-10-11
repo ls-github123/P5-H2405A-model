@@ -40,10 +40,6 @@ pip install -r requirements_web_demo.txt
 
 python web_demo.py  -c=Qwen-1_8B-Chat
 
-
-
-
-
 \# 安装torch
 
 \# 安装torch
@@ -131,10 +127,6 @@ cd Qwen
 python cli_demo.py -c Qwen-1_8B-Chat
 
 \```
-
-```
-
-```
 
 \# 启动服务
 
@@ -375,7 +367,7 @@ instance.launch(server_name='0.0.0.0', server_port=8008)
 
 案例
 
-~~~
+~~~python
 import random
 import time
 

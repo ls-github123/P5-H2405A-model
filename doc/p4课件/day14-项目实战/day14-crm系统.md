@@ -25,13 +25,75 @@
 
 ### 1. 客户细分与分层
 
-**需求描述**：企业需要根据客户的购买历史、消费能力、活跃度等因素，将客户细分为不同的群体，以便进行更有针对性的营销策略制定。
+**需求描述**：企业需要根据客户的购买历史、消费能力、活跃度等因素，将客户细分为不同的群体，以便进行更有针对性的营销策略制定。“高价值客户”、“近期活跃客户”，“高价值客户”推荐价格在1000以上的销量前5名的商品。“近期活跃客户”送优惠卷。
 
 **Agent与RAG应用**：
 
 - Agent识别用户输入的筛选条件，如“高价值客户”、“近期活跃客户”等。
 - RAG技术根据这些条件，在CRM数据库中检索相关字段（如购买金额、购买频率、最近登录时间等），并自动筛选出符合条件的客户列表。
 - Agent将筛选结果呈现给用户，并可能提供进一步的建议或行动指南，如为这些客户推荐特定的产品或服务。
+
+1.设计表
+
+~~~
+用户表
+id  mobile 
+
+订单表 （一个月内容订单总金额）
+id  userid  money  pay_status  add_time 
+登录记录表
+userid  login_time
+优惠卷表
+id  title  man  jian  总数  s_time   e_time
+
+用户优惠卷表
+userid  couponid  title  man  jian  总数  s_time   e_time
+
+商品表
+
+
+~~~
+
+2.写agent，三个tools，一个toos高价值客户推荐商品。第二个tools近期活跃客户送优惠卷。第三个问答走rag流程
+
+~~~
+from langchain.agents import initialize_agent,Tool
+from langchain_community.llms import Tongyi
+from langchain.agents import AgentType
+llm = Tongyi()
+
+#查询关于订单的问题
+def search_order(input:str)->str:
+    #查询订单表上个月1号到今天总价格在10000以上的用户
+    #查询商品价格在10000以上并且销量排名前10
+    #给用户发邮件
+
+
+#查询近期活跃
+def recommend_product(input:str)->str:
+    #查询用户表统计每个用户的总访问次数，排名前10
+    #从优惠卷表中随机获取给用户分配
+    return "裙子"
+
+#模拟问电商faq
+def faq(input:str)->str:
+    #查询faiss
+    return "7天无理由退货"
+
+tools=[
+    Tool(name="search order",func=search_order,
+    description = "高价值客户"),
+    Tool(name="recommend product",func=recommend_product,
+    description = "近期活跃客户"),
+    Tool(name="faq",func=faq,
+    description = "咨询模crm系统问题用这个工具回答"),
+]
+agent = initialize_agent(tools,llm,agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,verbose=True)
+res = agent.invoke("查询订单，订单号为1001")
+print(res)
+~~~
+
+
 
 ### 2. 潜在客户挖掘
 
