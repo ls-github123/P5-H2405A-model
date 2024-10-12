@@ -379,7 +379,7 @@ plt.show()
 
 具体实现流程
 
-~~~
+~~~python
 1.创建表
    公司表  id  公司名  提成比例  链接    邮箱
           1    百度    0.1            baidu.com
@@ -396,7 +396,16 @@ plt.show()
 3.饼图方式显示金额
 x=[100,200,30]
 label = ['京东','234324']
-select comany_id,count(id) from record group by comany_id
+
+SELECT  
+    c.name AS company_name,  
+    c.money * COUNT(r.id) AS total_amount  
+FROM  
+    company c  
+LEFT JOIN  
+    record r ON c.id = r.cid  
+GROUP BY  
+    c.id, c.name, c.money;
 查询公司表
 
      
