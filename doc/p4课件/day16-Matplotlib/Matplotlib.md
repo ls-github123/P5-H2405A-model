@@ -408,11 +408,9 @@ GROUP BY
     c.id, c.name, c.money;     
 ~~~
 
-![image-20241012135707569](/Users/hanxiaobai/Library/Application Support/typora-user-images/image-20241012135707569.png)
+![image-20241012135707569](images/image-20241012135707569.png)
 
-![image-20241012140324846](/Users/hanxiaobai/Library/Application Support/typora-user-images/image-20241012140324846.png)
-
-
+![image-20241012140324846](images/image-20241012140324846.png)
 
 #### 16.4.2 散点图绘制
 

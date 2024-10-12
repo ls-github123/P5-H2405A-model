@@ -1058,7 +1058,7 @@ pandas搜索+分组获取数据，用matplotlib画柱状图 ，每个月case通�
 
 ~~~
 
-![image-20241012145142410](/Users/hanxiaobai/Library/Application Support/typora-user-images/image-20241012145142410.png)
+![image-20241012145142410](images/image-20241012145142410.png)
 
 
 
