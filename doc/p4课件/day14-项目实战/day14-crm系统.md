@@ -113,7 +113,7 @@ EMAIL_FROM = 'A公司<18210208326@163.com>'
 
 2.发送代码
 
-~~~
+~~~python
 from django.core.mail import send_mail  
 from llmpro import settings
 def send_email_view(mail):  
@@ -140,8 +140,6 @@ class CrmManager(APIView):
         return Response({"code":200}) 
 
 ~~~
-
-
 
 ### 2. 潜在客户挖掘
 
@@ -217,10 +215,6 @@ print(res)
 - Agent将检索和汇总的结果以报表的形式呈现给用户，帮助用户快速了解业务状况。
 
 这些业务需求展示了Agent和RAG技术在CRM系统中的广泛应用潜力。通过结合两者的优势，企业可以更加高效地管理客户关系，提升客户满意度和忠诚度，进而实现业务增长和成功。
-
-
-
-
 
 ## **四、本单元知识总结**
 

@@ -233,6 +233,20 @@ plt.show()
 
 ![折线图](images\折线图举例.png)
 
+#### 统计每个月营业额
+
+~~~
+订单表2024
+id  orderno  userid   add_time               money         pay_status(1没支付  2已经支付)
+1    1001       1      2024-10-01 09:09:09     100             2
+1    1002       1      2024-02-01 09:09:09     100             2
+1    1003       1      2024-02-02 09:09:09     100             2
+
+select date_format(add_time,'%y-%m') as date,sum(numbers) as tmoney from qianwenpro_cates where add_time<'' and add_time>'' adn pay_status=2 group by DATE_FORMAT(add_time,'%y-%m');
+~~~
+
+
+
 #### 16.3.4 认识Matplotlib图像结构
 
 ![img](images\matplotlib图像结构.jpeg)
@@ -353,6 +367,40 @@ plt.axis("equal")
 # 展示图像
 plt.show()
 ```
+
+推广模块统计
+
+推广人员去谈公司，在公司的系统中生成链接，输入邮箱把链接发送给合作方，合作方在自己的平台显示链接，用户通过点击链接进入我们平台。饼图方式显示每个公司应付总金额 。
+
+~~~
+百度合作 http://jy.com   0.1
+京东合作 http://jy.com   0.2
+~~~
+
+具体实现流程
+
+~~~
+1.创建表
+   公司表  id  公司名  提成比例  链接    邮箱
+          1    百度    0.1            baidu.com
+          
+   访问记录表(record)
+         id  公司id  add_time
+         1    1       2020-10-10 00:00:00
+         1    2       2020-10-10 00:00:00
+     
+2.添加数据
+    1.写一个页面，销售在页面中操作。输入信息，点击提交，写入公司表（生成id），生成链接，http://jy.com/?cid=1,发送邮件，(您好，。。。。。我们平台的链接为  http://jy.com/?cid=1)
+    2.百度在自己页面上显示 http://jy.com/?cid=2
+    3.点击链接，获取cid，写入访问记录表
+3.饼图方式显示金额
+x=[100,200,30]
+label = ['京东','234324']
+select comany_id,count(id) from record group by comany_id
+查询公司表
+
+     
+~~~
 
 
 
