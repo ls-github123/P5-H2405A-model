@@ -1189,5 +1189,25 @@ class CrmManager(APIView):
         print(cates)
         return Response({"code":200}) 
 
+import pandas as pd
+class TestCsv(APIView):
+    def get(self,request):
+        reslist = []
+        data = pd.read_csv("/Users/hanxiaobai/Downloads/dxb/h2405a/llmpro/static/upload/reg.csv")
+        for index, row in data.iterrows():  
+            name = row[0]
+            interface = "http://locahost:8000/"+row[1]
+            params = row[2]
+            rescode = row[3]
+            res = requests.get(interface,params= params)
+            data = json.loads(res.text())
+            if data['code'] == rescode:
+                result = 1
+            else:
+                result =2
+                
+            reslist.append({"name":name,'params':params,'result':result})
+                
+        return Response({"code":200,'res':reslist})
         
         

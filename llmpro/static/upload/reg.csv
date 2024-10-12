@@ -1,0 +1,3 @@
+模块名称,请求地址 ,参数,响应结果
+用户模块-注册,register,"{""username"":""zs"",""password"":""123""}",200
+用户模块-注册,register,"{""username"":""zs"",""password"":""123456""}",10010

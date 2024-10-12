@@ -381,8 +381,8 @@ plt.show()
 
 ~~~python
 1.创建表
-   公司表  id  公司名  提成比例  链接    邮箱
-          1    百度    0.1            baidu.com
+   公司表  id  公司名  提成比例    链接                          邮箱
+          1    百度    0.1    http://jy.com/?cid=1        baidu.com
           
    访问记录表(record)
          id  公司id  add_time
@@ -390,9 +390,9 @@ plt.show()
          1    2       2020-10-10 00:00:00
      
 2.添加数据
-    1.写一个页面，销售在页面中操作。输入信息，点击提交，写入公司表（生成id），生成链接，http://jy.com/?cid=1,发送邮件，(您好，。。。。。我们平台的链接为  http://jy.com/?cid=1)
+    1.写一个页面，销售在页面中操作。输入信息，点击提交，写入公司表（生成id），生成链接，http://jy.com/?cid=1,发送邮件，(您好，。。。。。我们平台的链接为  http://jy.com/?cid=1),<a href="http://jy.com/?cid=1">积云教育</a>,把链接更新到公司表
     2.百度在自己页面上显示 http://jy.com/?cid=2
-    3.点击链接，获取cid，写入访问记录表
+    3.点击链接，请接口，在接口中用request.GET.get()获取cid，写入访问记录表
 3.饼图方式显示金额
 x=[100,200,30]
 label = ['京东','234324']
@@ -405,13 +405,12 @@ FROM
 LEFT JOIN  
     record r ON c.id = r.cid  
 GROUP BY  
-    c.id, c.name, c.money;
-查询公司表
-
-     
+    c.id, c.name, c.money;     
 ~~~
 
+![image-20241012135707569](/Users/hanxiaobai/Library/Application Support/typora-user-images/image-20241012135707569.png)
 
+![image-20241012140324846](/Users/hanxiaobai/Library/Application Support/typora-user-images/image-20241012140324846.png)
 
 
 

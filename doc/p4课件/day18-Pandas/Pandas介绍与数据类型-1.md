@@ -1041,6 +1041,8 @@ for index, row in data.iterrows():
 ```
 
 ~~~
+
+
 案例：
 自动化测试，测试人员把数据写入csv，根据csv去数据库中加记录，点击测试批量测试
 
@@ -1054,12 +1056,11 @@ id  请求url  响应结果  是否通过  测试时间
 
 pandas搜索+分组获取数据，用matplotlib画柱状图 ，每个月case通过的数量
 
-
-
-
-
-
 ~~~
+
+![image-20241012145142410](/Users/hanxiaobai/Library/Application Support/typora-user-images/image-20241012145142410.png)
+
+
 
 vue文件上传
 
