@@ -483,8 +483,6 @@ mi_df = pd.DataFrame(np.random.normal(size=(4,4)),index=mi_index)
 mi_df
 ```
 
-
-
 ### 18.3 基本数据操作
 
 为了更好的理解这些基本操作，我们将读取一个真实的股票数据。关于文件操作，后面在介绍，这里只先用一下API
@@ -1697,6 +1695,149 @@ starbucks.groupby(['Country', 'State/Province']).count()
 
 - groupby进行数据的分组【知道】
   - pandas中，抛开聚合谈分组，无意义
+
+
+
+### 综合案例
+
+基于电商平台用户行为分析，NumPy和Pandas可以发挥重要作用。以下是对该需求的分析步骤和具体内容：
+
+### 一、数据准备与预处理
+
+1. **数据获取**：
+   - 从电商平台获取用户行为数据，通常包括用户ID、商品ID、行为类型（如浏览、收藏、加购物车、下单、评论等）、时间戳等信息。
+2. **数据清洗**：
+   - 使用Pandas库处理数据，首先检查数据是否有缺失值、异常值或重复数据。
+   - 缺失值处理：根据业务逻辑选择填充缺失值、删除含有缺失值的行或列。
+   - 异常值处理：识别并处理不符合业务逻辑或超出合理范围的值。
+   - 重复数据处理：删除重复的行或列。
+3. **数据格式化**：
+   - 将时间戳转换为日期格式，方便后续按时间维度进行分析。
+   - 根据需要，将数据集中的某些列转换为适合分析的格式，如将分类数据转换为数值型数据（使用独热编码、标签编码等）。
+
+### 二、用户行为分析
+
+1. **行为类型统计**：
+   - 使用Pandas的`value_counts()`方法统计各种行为类型的数量和占比。
+   - 分析不同行为类型的分布特征，如浏览行为通常数量庞大，但转化率较低；下单行为数量较少，但代表实际交易。
+2. **用户访问量分析**：
+   - 计算总访问量（PV）和总访客数（UV），了解平台的整体流量情况。
+   - 分析日均访问量、人均访问量等指标，了解用户的访问频率和粘性。
+3. **消费用户分析**：
+   - 识别消费用户（有下单行为的用户），并计算消费用户数量、消费用户总访问量等指标。
+   - 分析消费用户的行为特征，如消费用户人均访问量、消费用户人均消费次数等。
+4. **复购行为分析**：
+   - 计算复购率，即有过多次购买行为的用户占总购买用户数的比例。
+   - 分析复购用户的行为特征，如复购周期、复购商品类别等。
+
+### 三、商品分析
+
+1. **商品浏览量分析**：
+   - 统计各商品的浏览量，了解哪些商品更受欢迎。
+   - 分析商品的浏览量变化趋势，了解商品的热度变化。
+2. **商品购买率分析**：
+   - 计算各商品的购买率，即购买该商品的用户数占总浏览该商品用户数的比例。
+   - 找出购买率最高的商品品类，分析这些品类的特点和优势。
+
+### 四、可视化分析
+
+1. **行为类型分布图**：
+   - 使用matplotlib或seaborn库绘制行为类型分布的柱状图或饼图，直观展示不同行为类型的占比。
+2. **用户访问量趋势图**：
+   - 绘制用户访问量的时间序列图，了解用户访问量的变化趋势和周期性规律。
+3. **商品浏览量热力图**：
+   - 使用日历热力图展示各商品的浏览量随时间的变化情况，分析商品的热门时段和冷门时段。
+4. **复购用户分析图**：
+   - 绘制复购用户的分布图或折线图，分析复购用户的特征和变化趋势。
+
+首先，我们需要导入必要的库并创建一个示例数据集：
+
+```python
+import numpy as np  
+import pandas as pd  
+import matplotlib.pyplot as plt  
+  
+  
+# 假设我们有一个CSV文件包含用户行为数据  
+# 这里我们直接创建一个DataFrame作为示例  
+data = {  
+    'user_id': np.random.randint(1, 1001, size=1000),  # 随机生成用户ID  
+    'product_id': np.random.randint(1, 501, size=1000),  # 随机生成商品ID  
+    'action_type': np.random.choice(['browse', 'favorite', 'cart', 'order', 'review'], size=1000),  # 随机生成行为类型  
+    'timestamp': pd.date_range(start='2023-01-01', periods=1000, freq='H')[:1000].astype(str)  # 生成时间戳并转换为字符串格式  
+}  
+df = pd.DataFrame(data)  
+  
+# 将时间戳转换为datetime类型  
+df['timestamp'] = pd.to_datetime(df['timestamp'])
+```
+
+接下来，我们进行一些基本的分析：
+
+1. **行为类型统计**：
+
+```python
+action_counts = df['action_type'].value_counts()  
+print(action_counts)  
+action_counts.plot(kind='bar')  
+plt.title('Action Type Counts')  
+plt.xlabel('Action Type')  
+plt.ylabel('Count')  
+plt.show()
+```
+
+1. **用户访问量分析**（PV和UV）：
+
+```python
+# PV：总访问量  
+pv = df.shape[0]  
+print(f'Total Page Views (PV): {pv}')  
+  
+# UV：总访客数（去重后的用户ID数量）  
+uv = df['user_id'].nunique()  
+print(f'Total Unique Visitors (UV): {uv}')
+```
+
+1. **消费用户分析**：
+
+```python
+# 识别消费用户（有下单行为的用户）  
+order_users = df[df['action_type'] == 'order']['user_id'].unique()  
+print(f'Number of Ordering Users: {len(order_users)}')  
+  
+# 消费用户总访问量  
+order_user_visits = df[df['user_id'].isin(order_users)].shape[0]  
+print(f'Total Visits by Ordering Users: {order_user_visits}')
+```
+
+1. **商品浏览量分析**：
+
+```python
+# 商品浏览量统计  
+product_views = df[df['action_type'] == 'browse']['product_id'].value_counts()  
+print(product_views.head())  # 打印浏览量最多的前几个商品  
+  
+# 商品浏览量变化趋势（这里按天统计作为示例）  
+daily_product_views = df[df['action_type'] == 'browse'].groupby(df['timestamp'].dt.date)['product_id'].count()  
+daily_product_views.plot(kind='line')  
+plt.title('Daily Product Browse Views')  
+plt.xlabel('Date')  
+plt.ylabel('Count')  
+plt.show()
+```
+
+商品推荐用户推荐功能实现
+
+~~~
+1.数据收集 用户浏览商品   userid   goodsid  views写入csv
+2.读取csv文件， userid=1,根据userid查询goodsid
+3.根据 goodsid查询  userid  orderby 排序views 
+4.根据userid查询所有的goodsid,和当前用户已经看过的取差集
+
+
+~~~
+
+
 
 
 

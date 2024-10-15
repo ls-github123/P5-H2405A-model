@@ -521,8 +521,6 @@ pip install "xinference[all]"
 
 
 
-
-
 ## **四、本单元知识总结**
 
 ```python
