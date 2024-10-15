@@ -55,3 +55,24 @@ class Goods(models.Model):
 
     def __str__(self):
         return self.title
+    
+    
+class Customer(models.Model):
+    name = models.CharField(max_length=200)
+    password = models.CharField(max_length=200)
+    account = models.CharField(max_length=200,unique=True)
+   
+
+    def __str__(self):
+        return self.name
+    
+class Resource(models.Model):
+    name = models.CharField(max_length=200,unique=True)
+    pid = models.ForeignKey('self',null=True,blank=True,on_delete = models.SET_NULL)
+    url = models.IntegerField()
+    customer = models.ManyToManyField(Customer,related_name='resource')
+    
+    def __str__(self):
+        return self.name
+    
+    

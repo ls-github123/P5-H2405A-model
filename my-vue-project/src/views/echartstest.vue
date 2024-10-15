@@ -6,8 +6,8 @@
 </template>
 
 <script lang="ts" setup>  
-import { ref,onMounted } from 'vue'  
-// import http from "../http";  
+ import { ref,onMounted } from 'vue'  
+// import http from "../http"; 
 import * as echarts from 'echarts';
 const xlist = ref(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
 const ylist = ref([120, 200, 150, 80, 70, 110, 130])

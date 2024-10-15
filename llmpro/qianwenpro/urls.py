@@ -45,5 +45,6 @@ urlpatterns = [
     path('testBd/',TestBd.as_view()),
     path('publishView/',PublishView.as_view()),
     path('crmManager/',CrmManager.as_view()),
-    path('testCsv/',TestCsv.as_view())
+    path('testCsv/',TestCsv.as_view()),
+    path('resource/',ResourceView.as_view())
 ]

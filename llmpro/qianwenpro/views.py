@@ -1210,4 +1210,51 @@ class TestCsv(APIView):
                 
         return Response({"code":200,'res':reslist})
         
+# #删除此角色对应的所有权限
+# role.resource.clear()
+# #添加新的权限
+# role.resource.add(*values)
+# for index,s in enumerate(reslist):
+
+def resdata(data):
+    if len(data)>0:
+        parentlist = []
+        ids = []
+        for i in data:
+            if i['pid'] not in ids:
+                pdict = {"id":i['pid'],'label':i['pname'],'children':[]}
+                parentlist.append(pdict)
+                ids.append(i['pid'])
+        
+        for (index,i) in enumerate(parentlist):
+            for j in data:
+                if int(i['id']) == int(j['pid']):
+                    parentlist[index]['children'].append({"id":j['id'],'label':j['name']})
+            
+        return parentlist
+    else:
+        return []
+
+class ResourceView(APIView):
+    def post(self,request):
+        userid = request.data['userid']
+        res = request.data['res']
+        user = Customer.objects.filter(id=userid).first()
+        #删除此用户所有的资源
+        user.resource.clear()
+        #把新的资源配制给用户
+        user.resource.add(*res)
+        return Response({"code":200})
+    
+    def get(self,request):
+        userid = request.GET.get('userid')
+        user = Customer.objects.filter(id=userid).first()
+        user = user.resource.all()
+        reslist = []
+        for i in user:
+            dict = {"id":i.id,'pid':i.pid.id,'pname':i.pid.name,'name':i.name,'url':i.url}
+            reslist.append(dict)
+        
+        res = resdata(reslist)
+        return Response({"code":200,"reslist":res})
         

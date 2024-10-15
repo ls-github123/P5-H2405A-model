@@ -8,8 +8,13 @@ import updatetoken from '../views/updatetoken.vue'
 import fileupload from '../views/fileupload.vue'
 import testsse from '../views/testsse.vue'
 import fupload from '../views/fupload.vue'
+import setreource from '../views/setreource.vue'
 
 const routes = [{
+        path: '/setreource',
+        name: 'setreource',
+        component: setreource
+    }, {
         path: '/fupload',
         name: 'fupload',
         component: fupload

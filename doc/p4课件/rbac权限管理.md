@@ -55,6 +55,13 @@ userid  resid
 
 ![image-20241015092911420](Images/image-20241015092911420.png)
 
+显示菜单
+
+~~~
+[{"id":1,"label":"教学管理","children":[{"id":2,'label':'考试管理'},{},{}]}]
+
+~~~
+
 
 
 2.rbac
