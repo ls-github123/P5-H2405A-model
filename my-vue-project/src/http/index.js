@@ -8,6 +8,43 @@ const http = axios.create({
     withCredentials: false, // 是否允许客户端ajax请求时携带cookie
 })
 
+// 请求拦截器
+http.interceptors.request.use((config) => {
+    alert('333')
+    console.log("http请求之前");
+    //获取token
+    let token = localStorage.getItem('token')
+    if (token) {
+        config.headers.Authorization = localStorage.getItem('token')
+    }
+
+    return config;
+}, (error) => {
+    console.log("http请求错误");
+    return Promise.reject(error);
+});
+
+
+// 响应拦截器
+http.interceptors.response.use((response) => {
+    console.log(response)
+    if (response.data.code == 401) {
+        return router.push("/register");
+    } else {
+        return response;
+    }
+
+}, (error) => {
+    if (error.code === "ERR_NETWORK") {
+        ElMessage.error("网络异常，无法请求服务端信息！");
+    }
+    if (error.response.status === 401) {
+        ElMessage.error("未登录或登录超时！限制本次请求操作！请求登录后继续！");
+        return router.push("/login");
+    }
+
+    return Promise.reject(error);
+});
 
 
 export default http;

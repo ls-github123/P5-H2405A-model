@@ -1294,6 +1294,7 @@ class LoginView(APIView):
                 resource = resdata(reslist)
                 #存入redis
                 mredis.str_set(key,json.dumps(resource))
+                #根据pomitionlist查询另外表，查询接口权限，存入redis
                 mredis.str_set('menulist'+str(roleid),json.dumps(pomitionlist))
                 
                 
