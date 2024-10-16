@@ -1229,7 +1229,7 @@ def resdata(data):
         for (index,i) in enumerate(parentlist):
             for j in data:
                 if int(i['id']) == int(j['pid']):
-                    parentlist[index]['children'].append({"id":j['id'],'label':j['name']})
+                    parentlist[index]['children'].append({"id":j['id'],'label':j['name'],'url':j['url']})
             
         return parentlist
     else:
@@ -1257,4 +1257,46 @@ class ResourceView(APIView):
         
         res = resdata(reslist)
         return Response({"code":200,"reslist":res})
-        
+from tools.myjwt import mjwt
+import time
+class LoginView(APIView):
+    def post(self,request):
+        name = request.data['name']
+        pwd = request.data['pwd']
+        print(name)
+        print(pwd)
+        users = Customer.objects.filter(account=name,password=pwd).first()
+        print(users)
+        if users:
+            #登录成功生成token返回
+            #查询资源列表，返回前端
+            #判断用户角色redis中是否存在，如果存在返回
+            #如果不存在查询
+            roleid = users.roles.id
+            key = 'roles'+str(roleid)
+            mredis.str_del(key)
+            resource = mredis.str_get(key) 
+            user = {"id":users.name,'name':name,'exp':int(time.time())+3600}
+            token = mjwt.jwt_encode(user)
+            pomitionlist = []
+            #查询redis
+            if resource:
+                resource = json.loads(resource)
+                mlist = mredis.str_get('menulist'+str(roleid)) 
+                pomitionlist = json.loads(mlist)
+            else:
+                res = users.roles.resources.all()
+                reslist = []
+                for i in res:
+                    pomitionlist.append(i.url)
+                    dict = {"id":i.id,'pid':i.pid.id,'pname':i.pid.name,'name':i.name,'url':i.url}
+                    reslist.append(dict)
+                resource = resdata(reslist)
+                #存入redis
+                mredis.str_set(key,json.dumps(resource))
+                mredis.str_set('menulist'+str(roleid),json.dumps(pomitionlist))
+                
+                
+            return Response({"code":200,'userid':users.id,'token':token,'menulist':resource,'pomitionlist':pomitionlist})
+        else:
+            return Response({"code":10010})

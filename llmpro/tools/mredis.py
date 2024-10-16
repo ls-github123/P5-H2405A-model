@@ -5,7 +5,15 @@ class Mredis():
         pool = ConnectionPool()
         self.r = redis.Redis(connection_pool=pool)
         
-        
+    
+    def str_set(self,key,value):
+        return self.r.set(key,value)
+    
+    def str_del(self,key):
+        return self.r.delete(key)
+    
+    def str_get(self,key):
+        return self.r.get(key)
     #list add  del  find pop len  rpoplpush
     def list_add(self,key,value):
         return self.r.rpush(key,value)

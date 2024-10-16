@@ -55,24 +55,33 @@ class Goods(models.Model):
 
     def __str__(self):
         return self.title
+
+class Resource(models.Model):
+    name = models.CharField(max_length=200,unique=True)
+    pid = models.ForeignKey('self',null=True,blank=True,on_delete = models.SET_NULL)
+    url = models.CharField(max_length=200,default="")
+    # customer = models.ManyToManyField(Customer,related_name='resource')
     
+    def __str__(self):
+        return self.name  
+
+class Roles(models.Model):
+    name = models.CharField(max_length=200,unique=True)
+    resources = models.ManyToManyField(Resource)
+    
+    def __str__(self):
+        return self.name
     
 class Customer(models.Model):
     name = models.CharField(max_length=200)
     password = models.CharField(max_length=200)
     account = models.CharField(max_length=200,unique=True)
+    roles = models.ForeignKey(Roles,on_delete=models.SET_NULL,null=True,blank=True)
    
 
     def __str__(self):
         return self.name
     
-class Resource(models.Model):
-    name = models.CharField(max_length=200,unique=True)
-    pid = models.ForeignKey('self',null=True,blank=True,on_delete = models.SET_NULL)
-    url = models.IntegerField()
-    customer = models.ManyToManyField(Customer,related_name='resource')
-    
-    def __str__(self):
-        return self.name
+
     
     

@@ -150,16 +150,6 @@ roleid  resid
 
 ~~~
 
-
-
-
-
-
-
-
-
-
-
 rbac1
 
 rbac2
