@@ -53,7 +53,7 @@ https://www.axureshop.com/ys/2173349
 
 
 
-![image-20241022140154226](/Users/hanxiaobai/Library/Application Support/typora-user-images/image-20241022140154226.png)
+![image-20241022140154226](images/image-20241022140154226.png)
 
 
 
