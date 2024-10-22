@@ -142,13 +142,19 @@ roleid  resid
 用户token被恶意拦截，当前用户已经退出，别人用他的token继续操作怎么办？
 
 ~~~
-
+用户点击退出，把token存入redis字符串存储，加一个过期时间token过期时间。在中间件验证token、过期时间、是否有权限操作，验证是否已经退出（token查询redis,如果存在返回无权访问，用户已经退出）
 ~~~
 
 如何支持多个端登录
 
 ~~~
+输入用户名密码-》验证，生成token（data={'userid':1}）返回-》
+~~~
 
+token有效期设置了多长时间，过期后都需要登录吗，如何实现的，如何给token续命？
+
+~~~
+登录成功后给客户端返回两个token->userid\token\menulist\retoken(过期时间大于token)->客户端定时任务3小时自动调用retoken接口-》携带retoken-》自动刷新token的接口获取解析retoken，解析出用户信息，用用户信息生成新的token和retoken返回
 ~~~
 
 rbac1
@@ -157,5 +163,24 @@ rbac2
 
 Rbac3
 
-3.abac
+abac
+
+agent工作流
+
+~~~
+工作流表
+id  name 
+1   请假工作流
+
+配制本
+id 任务id 任务名称  描述  类型                            步骤      参数
+1    1     请假      当你请假调用    {"type":1,"url":""}       1
+2    1     审批          {"type":3,"url":"tasks"}  1    
+
+
+
+Tools(tools=[])
+~~~
+
+![image-20241017101212738](Images/image-20241017101212738.png)
 

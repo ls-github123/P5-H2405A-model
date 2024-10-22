@@ -70,7 +70,7 @@ def search_order(input:str)->str:
     #给用户发邮件
 
 
-#查询近期活跃
+#售前咨询推荐
 def recommend_product(input:str)->str:
     #查询用户表统计每个用户的总访问次数，排名前10
     #从优惠卷表中随机获取给用户分配
@@ -83,11 +83,11 @@ def faq(input:str)->str:
 
 tools=[
     Tool(name="search order",func=search_order,
-    description = "高价值客户"),
+    description = "售前咨询推荐"),
     Tool(name="recommend product",func=recommend_product,
-    description = "近期活跃客户"),
+    description = "售后订单查询"),
     Tool(name="faq",func=faq,
-    description = "咨询模crm系统问题用这个工具回答"),
+    description = "旅游知识问答"),
 ]
 agent = initialize_agent(tools,llm,agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,verbose=True)
 res = agent.invoke("查询订单，订单号为1001")
@@ -318,6 +318,8 @@ print(res)
 - Agent将检索和汇总的结果以报表的形式呈现给用户，帮助用户快速了解业务状况。
 
 这些业务需求展示了Agent和RAG技术在CRM系统中的广泛应用潜力。通过结合两者的优势，企业可以更加高效地管理客户关系，提升客户满意度和忠诚度，进而实现业务增长和成功。
+
+
 
 ## **四、本单元知识总结**
 
