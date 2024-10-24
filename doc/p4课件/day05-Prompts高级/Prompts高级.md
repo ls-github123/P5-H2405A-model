@@ -708,7 +708,7 @@ def sse_notifications(request):
     return response
 ~~~
 
-### 5.3输出解析器
+### 5.3输出解析器(扩展)
 
 #### 5.3.1介绍
 
