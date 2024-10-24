@@ -386,63 +386,74 @@ class Dingding():
 python代码实现
 
 ```
-from abc import ABC, abstractmethod  
-  
-class Product(ABC):  
-    @abstractmethod  
-    def geturl(self):  
+from abc import ABC,abstractmethod
+
+#抽像工厂
+class Product(ABC):
+    @abstractmethod
+    def geturl(self):
         pass
     @abstractmethod
     def callback(self):
         pass
-  
-# 具体产品类  
-class Dingding(Product):  
-   def geturl(self):  
-        return "使用产品A"  
-   def callback(self):  
-        return "使用产品A"  
-  
-class Weibo(Product):  
-   def geturl(self):  
-        return "使用产品A"  
-   def callback(self):  
-        return "使用产品A" 
 
-    
- class Weixin(Product):  
-   def geturl(self):  
+
+class Dingding(Product):
+    def __init__(self) -> None:
+        self.api_key = '234234'
         
-        return "使用产品A"  
-   def callback(self):  
-        return "使用产品A" 
     
-  。。。  
-      
-      
- #创建工厂类
- class ProductFactory:  
-    def create_product(self, product_type):  
-        if product_type == "weibo":  
-            return Weibo()  
-        elif product_type == "dingding":  
-            return Dingding()  
-        else:  
-            raise ValueError("无效的产品类型")  
-  
-# 使用工厂类创建产品实例  
-factory = ProductFactory()  
-product_a = factory.create_product("weibo")  
-print(product_a.geturl())  # 输出: 使用产品A  
-url = product_a.geturl()
-return
-  
-product_b = factory.create_product("B")  
-print(product_b.use())  # 输出: 使用产品B  
-  
-# 尝试创建一个不存在的产品类型  
-# 这会抛出一个ValueError异常  
-# product_c = factory.create_product("C")
+    def geturl(self):
+        url = "dingding.com/"
+        return url
+    
+    def callback(self):
+        #钉钉操作
+        uid='23'
+        token='22'
+        retoken='222'
+        return uid,token,retoken
+    
+
+
+
+class Weibo(Product):
+    def __init__(self) -> None:
+        self.api_key = '234234'
+        
+    
+    def geturl(self):
+        url = "weibo.com/"
+        return url
+    
+    def callback(self):
+        #weibo操作
+        uid='23'
+        token='22'
+        retoken='222'
+        return uid,token,retoken
+    
+    
+class Factory():
+    def create_factory(self,params):
+        if params == 'dingding':
+            return Dingding()
+        
+        elif params == 'weibo':
+            return Weibo()
+        
+        
+        
+factory = Factory()
+
+
+
+在view中调用 
+class SFloginView(APIView):
+    def get(self,request):
+        params = request.GET.get('params')
+        class1 = factory.create_factory(params)
+        return Response({"code":200,'url':class1.geturl()})
 ```
 
 工厂模式对三方登录的封装

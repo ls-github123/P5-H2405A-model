@@ -1301,3 +1301,11 @@ class LoginView(APIView):
             return Response({"code":200,'userid':users.id,'token':token,'menulist':resource,'pomitionlist':pomitionlist})
         else:
             return Response({"code":10010})
+        
+        
+
+class SFloginView(APIView):
+    def get(self,request):
+        params = request.GET.get('params')
+        class1 = factory.create_factory(params)
+        return Response({"code":200,'url':class1.geturl()})
