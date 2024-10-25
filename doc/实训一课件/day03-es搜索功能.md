@@ -363,7 +363,7 @@ get http://localhost:9200/shopping/_search
 	"size":2,
 	"_source":["name","age"],
 	"sort":{
-		"id":{
+		"add_time":{
 			"order":"desc"
 		}
 	}
@@ -461,175 +461,180 @@ es.count(index``=``"my_index"``,doc_type``=``"test_type"``)
 
 ```
 
-数据同步
+首页使用es实现功能
+
+1.数据的导入，把mysql数据导入es
 
 ~~~
+from elasticsearch import Elasticsearch
+es = Elasticsearch("http://localhost:9200/")
+
+class DataView(APIView):
+
+  def get(self,request):
+      #查询数据
+      dockers = Doctor.objects.all()
+      askTa = AskTable.objects.all()
+      for i in dockers:
+         es.index(index='doctor', body={
+                  'id': i.id,
+                  'table_name': 'doctor',
+                  'name': i.name,
+                  'type':'doctors'
+              })
+              
+       for i in askTa:
+         es.index(index='doctor', body={
+                  'id': i.code,
+                  'table_name': 'doctor',
+                  'name': i.title,
+                  'type':'asktable'
+              })
+              
+~~~
+
+2.搜索
+
+vue页面，用户输入信息，点击搜索
+
+~~~
+ class Search(APIView):
+    def get(self,request):
+        #获取当前页
+        page = request.GET.get("page")
+        #每页显示多少条
+        page_size=2
+        #搜索内容
+        mes = request.GET.get('mes')
+        #计算开始位置
+        start = (page-1)*page_size
+ 
+       dsl={
+              "query":{
+                  "match":{"name":mes}
+              },
+              "from":start,
+              "size":page_size,
+              "_source":["name","age"],
+              "sort":{
+                "age":{
+                  "order":"desc"
+                }
+              }
+
+          }
+          res = es.search(index="doctor", body=dsl)
+          print(res['hits']['hits'])
+          return 'ok'
+
+
+~~~
+
+复杂查询
+
+~~~python
+from elasticsearch import Elasticsearch, helpers  
+import datetime  
+  
+# 连接到 Elasticsearch 客户端  
+es = Elasticsearch(["http://localhost:9200"])  
+  
+# 定义索引名称  
+index_name = "your_index_name"  
+  
+# 定义查询函数  
+def multi_condition_query(stime=None,endtime=None,name=None, gender=None):  
+    list=[]
+      
+    # 添加时间条件（假设时间字段为 'timestamp' 且格式为 ISO 8601）  
+    if stime and endtime:  
+        time_range_query = {  
+            "range": {  
+                "timestamp": {  
+                    "gte": stime,  # 开始时间  
+                    "lte": endtime
+                }  
+            }  
+        }  
+       list.append(time_range_query)  
+      
+    # 添加姓名条件  
+    if name:  
+        name_query = {  
+            "match": {  
+                "name": name  
+            }  
+        }  
+        list.append(name_query)  
+      
+    # 添加性别条件  
+    if gender:  
+        gender_query = {  
+            "match": {  
+                "gender": gender  
+            }  
+        }  
+       list.append(gender_query)  
+      
+    # 如果没有 must 条件，则查询所有（可选）  
+   
+      
+    return list  
+
+class SearchView(APIView):
+  def get(self,request):
+      # 示例查询  
+      stime =   request.GET.get('stime')
+      endtime =   request.GET.get('endtime')
+      name_condition = request.GET.get('name')  # 可选，设置姓名条件  
+      gender_condition = request.GET.get('gender')  # 可选，设置性别条件  
+      page = request.GET.get('page')  # 可选，设置性别条件 
+
+      query = multi_condition_query(time_condition, name_condition, gender_condition)  
+
+       query1 = {  
+          "query": {  
+            "bool": {  
+              "must": [],  
+              "should": []  
+            }  
+          },
+          "from":start,
+          "size":
+        } 
+
+        if len(query)>0:
+          for i in list:
+             query1["query"]["bool"]["must"].append(i) 
+        else:
+           query1["query"]["match_all"] = {}  
+           del query["query"]["bool"]  
+
+
+
+      # 打印查询语句  
+      print(query)  
+
+      # 执行查询  
+      response = es.search(index=index_name, body=query)  
+
+      # 打印查询结果  
+      print(response)
+~~~
+
+
+
+3.数据同步（异步导入数据，celery定时同步，监听mysql的binlog）
+
+~~~python
 全量式：将mysql中课程表中的所有数据同步到es,最大id存入redis中，定时任务每天晚上12进行同步，查询redis中的最后一次同步的id,查询mysql从最大id之后的数据
 
 课程需要审核，审核通过后更新课程状态，把课程加到es中
 
 监听binlog日志，分析日志，提取加入课程语句，放到es
-
-
 ~~~
 
 
-
-例子
-
-~~~
-使用es查询商品信息
-1.先mysql中的数据加载到es中,第一次全量式同步，后面增量式同步
-2.实例化Elasticsearch类
-3.es.index创建索引，把记录添加到es中
-4.用es._search从查询数据
-~~~
-
-
-
-~~~
-"""
-es 引擎相关
-"""
- 
-from elasticsearch import Elasticsearch
-# 创建es 实例
-es = Elasticsearch("http://124.71.227.70:9200/")
- 
-~~~
-
-同步数据
-
-~~~
-from elasticsearch import Elasticsearch
-import traceback
-
-@user_blue.route("/esinsert")
-def insert_data_to_es():
-    es = Elasticsearch("http://localhost:9200/")
-    # 清空数据
-    # es.indices.delete(index='user')
-    try:
-        i = -1
-        for row in get_db_data():
-            print(row)
-            print(row[1], row[2])
-            i += 1
-            # index就是对应的一张表 eg.对应的就是course表
-            es.index(index='user1', body={
-                'id': i,
-                'table_name': 'user1',
-                'mobile': row[1],
-                'roleid': row[2],
-            })
-        print("###")
-    except:
-        print("&&&")
-        error = traceback.format_exc()
-        print("Error: unable to fecth data", error)
-        pass
-    return 'ok'
-
-
-
-~~~
-
-使用
-
-~~~
-from util.myes import ES
-@user_blue.route("/find")
-def find():
-     es = ES(index_name='user1')
-     result = es._search("18210203878", fields=['mobile'])
-     print(result)
-     return 'ok'
-~~~
-
-~~~
-create table test(
-	id int primary key auto_increment,
-	name varchar(30),
-	age  int,
-	descr varchar(200)
-);
-
-insert into test values(0,"张三",10,"茜茜遥遥爱你的的伯伯"),(0,"李四",1,"茜茜遥遥爱你的的伯伯33333"),(0,"张三123",50,"茜茜遥遥爱你的的伯伯111"),(0,"张三22",30,"茜茜遥遥爱你的的伯伯2222");
-~~~
-
-~~~
-from elasticsearch import Elasticsearch
-
-es = Elasticsearch(hosts="http://127.0.0.1:9200/")
-
-@goods_blue.route("/addesformysql")
-def addesformysql():
-    sql ="select * from test"
-    res = db.findAll(sql)
-    for i in res:
-        es.index(index='test', body={
-                'id': i['id'],
-                'table_name': 'test',
-                'name': i['name'],
-                'age': i['age'],
-            })
-@goods_blue.route("/findes")
-def findes():
-    dsl={
-        "query":{
-            "match":{"name":"张三"}
-        }
-
-    }
-    res = es.search(index="test", body=dsl)
-    print(res['hits']['hits'])
-    return 'ok'
-
-
-作业：
-写一张表，包含姓名，性别，年龄？加10条不同年龄段不同性别的数据
-
-同步数据到es,每个组命名user1代表1组
-
-1.查询性别为“男”的所有记录
-2.查询年龄在20-30之间的，包含20，30
-3.查询名字中包含‘小’的记录，并分页显示，每页面显示2条记录，根据id倒序排列
-
-~~~
-
-<img src="/Users/hanxiaobai/Downloads/python/p8/课件/newp8/p9/images/8.png">
-
-~~~
-# 查询名字中包含‘小’的记录，并分页显示，每页面显示2条记录，根据id倒序排列
-@goods_blue.route("/findes")
-def findes():
-    page = request.args.get("page")
-    pagesize = 2
-    start = (int(page)-1)*pagesize
-    dsl={
-	"query":{
-		"match":{"name":"张三"}
-	},
-	"from":start,
-	"size":pagesize,
-	"sort":{
-		"id":{
-			"order":"desc"
-		}
-	}
-}
-    #查询共有多少条记录的条件
-    dsl1={
-	"query":{
-		"match":{"name":"张三"}
-	}}
-    res = es.search(index="test", body=dsl)
-    count = es.count(index="test",body=dsl1)
-    print(count['count'])
-    print(res['hits']['hits'])
-    return 'ok'
-
-~~~
 
 ~~~python
 from elasticsearch import Elasticsearch, helpers  
@@ -739,10 +744,5 @@ def estest():
         print("Error: unable to fecth data", error)
         pass
     return 'ok'
-~~~
-
-~~~
-insert into userinfo values(0,'2021-10-10 10:10:10','2021-11-10 10:10:10',0,'1005','lkasf','i.jpg','1123245',2,1,10,1);
-insert into userinfo values(0,'2022-10-10 10:10:10','2022-10-11 10:10:10',0,'1006','gas324','i.jpg','1223535345',2,1,0,1);
 ~~~
 
