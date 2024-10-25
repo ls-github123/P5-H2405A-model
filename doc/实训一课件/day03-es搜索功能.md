@@ -72,6 +72,20 @@ title   001华为手机    002小米手机
 ik  jieba
 华为  手机
 手机 =》{001（出现次数，出现位置），002}
+
+分词  ik  jieba
+
+1   我喜欢小猫
+
+2   小猫非常可爱
+
+
+1  我   喜欢   小猫   我喜欢   小猫
+2  小猫   非常   可爱  小猫   听话
+
+小猫-》{1:{2,1},2:[0,3],2}
+
+
 ~~~
 
 <img src="/Users/hanxiaobai/Downloads/python/p8/课件/newp8/p9/images/1.png">
@@ -152,8 +166,6 @@ DELETE /索引名称
 
 
 
-
-
 ### 2.docker
 
 ~~~
@@ -216,10 +228,11 @@ docker start
 
 ~~~
 docker pull elasticsearch:7.7.0
+docker run --name elasticsearch -p 9200:9200 -p 9300:9300  elasticsearch:7.7.0
 
 docker network create elastic
 docker pull docker.elastic.co/elasticsearch/elasticsearch:7.7.0
-docker run --name elasticsearch --net elastic -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -t docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+docker run --name elasticsearch --net elastic -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -t elasticsearch:7.7.0
 
 ~~~
 
@@ -619,50 +632,78 @@ def findes():
 ~~~
 
 ~~~python
-
-@u_blue.route("/find")
-def find():
-    page = request.args.get("page")
-    pagesize=1
-    start =(int(page)-1)*pagesize
-    es = Elasticsearch("http://localhost:9200/")
-    sortid = request.args.get("sortid")
-    type1 = request.args.get("type")
-    tagid = request.args.get("tagid")
-    online = request.args.get("online")
-    str = '"match_all":{}'
-    flag = False
-    ss = '"bool":{"must":[{"match":{"'
-    if type1:
-        flag=True
-        ss=ss+'type":'+type1+'}}'
-    if online:
-        if flag == True:
-            ss=ss+',{"match":{"online":'+online+'}}'
-        else:
-            flag=True
-            ss=ss+'online":'+online+'}}'
-    if tagid:
-        if flag == True:
-            ss=ss+',{"match":{"tagid":'+tagid+'}}'
-        else:
-            flag=True
-            ss=ss+'tagid":'+tagid+'}}'
-
-    if flag == True:
-        str = ss+']}'
-    
-    if sortid:
-        sort = '"sort":{"id":{"order":"desc"}}'
-        dsl = '{'+'"query":{'+str+'},"from":'+str(start)+',"size":'+str(pagesize)+','+sort+'}'
-    else:
-        dsl = '{'+'"query":{'+str+'},"from":'+start+',"size":20}'
-
-    match_data = es.search(index="courses", body=dsl)
-    results=[]
-    for hit in match_data['hits']['hits']:
-        results.append(hit['_source'])
-    return jsonify({"res":results})
+from elasticsearch import Elasticsearch, helpers  
+import datetime  
+  
+# 连接到 Elasticsearch 客户端  
+es = Elasticsearch(["http://localhost:9200"])  
+  
+# 定义索引名称  
+index_name = "your_index_name"  
+  
+# 定义查询函数  
+def multi_condition_query(time=None, name=None, gender=None):  
+    query = {  
+        "query": {  
+            "bool": {  
+                "must": [],  
+                "should": []  
+            }  
+        }  
+    }  
+      
+    # 添加时间条件（假设时间字段为 'timestamp' 且格式为 ISO 8601）  
+    if time:  
+        time_range_query = {  
+            "range": {  
+                "timestamp": {  
+                    "gte": time.strftime('%Y-%m-%dT%H:%M:%S'),  # 开始时间  
+                    "lte": (time + datetime.timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S')  # 结束时间（到下一天的同一时间）  
+                }  
+            }  
+        }  
+        query["query"]["bool"]["must"].append(time_range_query)  
+      
+    # 添加姓名条件  
+    if name:  
+        name_query = {  
+            "match": {  
+                "name": name  
+            }  
+        }  
+        query["query"]["bool"]["must"].append(name_query)  
+      
+    # 添加性别条件  
+    if gender:  
+        gender_query = {  
+            "match": {  
+                "gender": gender  
+            }  
+        }  
+        query["query"]["bool"]["must"].append(gender_query)  
+      
+    # 如果没有 must 条件，则查询所有（可选）  
+    if not query["query"]["bool"]["must"]:  
+        query["query"]["match_all"] = {}  
+        del query["query"]["bool"]  
+      
+    return query  
+  
+# 示例查询  
+time_condition = datetime.datetime(2023, 10, 1)  # 可选，设置时间条件  
+name_condition = "John Doe"  # 可选，设置姓名条件  
+gender_condition = "male"  # 可选，设置性别条件  
+  
+query = multi_condition_query(time_condition, name_condition, gender_condition)  
+  
+# 打印查询语句  
+print(query)  
+  
+# 执行查询  
+response = es.search(index=index_name, body=query)  
+  
+# 打印查询结果  
+print(response)
 ~~~
 
 ~~~python

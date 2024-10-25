@@ -472,6 +472,21 @@ class SFloginView(APIView):
 单例模式
 
 ```
+import threading
+class A():
+   instance = {}
+   if cls not in instance:
+      with threading.lock():
+      	instance[cls] = super.__new__()
+      
+      
+    return instance
+   
+   
+a = A()
+b = A()
+c = A()
+
 单例模式（Singleton Pattern）是一种创建型设计模式，它确保一个类只有一个实例，并提供一个全局访问点来访问这个唯一实例。在Python中，可以通过多种方式实现单例模式。
 ```
 
@@ -495,6 +510,18 @@ singleton_instance = Singleton_module.Singleton()
 
 ```
 装饰器在原有功能不变的基础上加上新的功能。底层采用闭包理念实现。内外函数嵌套，外层函数返回内层函数，内层函数引用外部函数的变量。装饰器分为有参装饰器和无参装饰器。当func有多个装饰器时，装饰器会按照从下到上的顺序对func进行装饰，也就是最靠近函数的装饰器最先应用装饰，执行的时候从上往下执行。两个以上func被两个及以上装饰器装饰的时候会报错。导入functools包用wraps方法装饰一下。应用场景权限验证，接口执行时间统计，接口过滤
+
+
+@promition
+@app.router(methods=["POST","GET"],"/login")
+def login():
+
+@promition
+@app.router(methods=["POST","GET"],"/reg")
+def reg():
+
+
+
 ```
 
 可以通过装饰器来简化单例模式的实现。
@@ -503,7 +530,7 @@ singleton_instance = Singleton_module.Singleton()
 import threading
 def singleton(cls):  
     instances = {} 
-    
+  
     def get_instance(*args, **kwargs):  
         if cls not in instances:
             with threading.lock:
@@ -529,9 +556,9 @@ import threading
 def singleton(cls):  
     instances = {} 
     def get_instance(*args, **kwargs): 
-        with threading.Lock(): 
-            if cls not in instances:
-                instances[cls] = cls(*args, **kwargs)  
+        if cls not in instances:
+        	with threading.Lock(): 
+        		instances[cls] = cls(*args, **kwargs)  
         return instances[cls]  
     return get_instance  
   
