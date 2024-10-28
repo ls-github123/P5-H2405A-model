@@ -1,6 +1,6 @@
 ### 1.倒排索引
 
-<img src="/Users/hanxiaobai/Downloads/python/p8/课件/newp8/p9/images/3.png">
+<img src="images/3.png">
 
 
 
@@ -88,7 +88,7 @@ ik  jieba
 
 ~~~
 
-<img src="/Users/hanxiaobai/Downloads/python/p8/课件/newp8/p9/images/1.png">
+<img src="images/es.png">
 
 倒排索引的结构
 根据倒排索引的概念，我们可以用一个 Map来简单描述这个结构。这个 Map 的 Key 的即是分词后的单词，这里的单词称为 Term，这一系列的 Term 组成了倒排索引的第一个部分 —— Term Dictionary (索引表，可简称为 Dictionary)。
@@ -101,7 +101,7 @@ ik  jieba
 词频（TF，Term Frequency），记录 Term 在每篇文档中出现的次数，用于后续相关性算分。
 位置（Position），记录 Term 在每篇文档中的分词位置（多个），用于做词语搜索（Phrase Query）。
 偏移（Offset），记录 Term 在每篇文档的开始和结束位置，用于高亮显示等。
-<img src="/Users/hanxiaobai/Downloads/python/p8/课件/newp8/p9/images/2.png">
+<img src="images/es2.png">
 
 elasticsearch中支持的常见字段数据类型：
 
