@@ -1,99 +1,66 @@
-### 1.视频发布
+分表
 
-~~~
-创作者平台
-发布-》图文
-   -》视频
-   -》标题提取
-   -》分表
-   
-100万用户
-20-30左右
-5万条-》
-
-总用户量
-日活
-并发访问qps
-
-分表有两种：
-水平：根据行去分，两张表的结构完全一样，数据分离
-   按月分，冷热数据，按用户，平均分配
-垂直：单表字段太多，用户30多个字段，高频使用的放到user中，userinfo，一对一
-
-SELECT * from publish1  UNION  select * from publish2;
-union去重  
-union all不去重
-~~~
-
-### 2.分表
-
-~~~
-publish1
-1
-2
-3
-publish2
-1
-2
-3
-
-唯一id
-mysql表的方式 ：id 
-uuid
-redis 
-
-
-将一张表分成多张表
-
-垂直分表 ：单表多于20个字段
-用户名  密码   积分  签名  头像  。。。。
-
-用户表  用户名 密码 积分   
-用户信息表  userid 签名  头像  。。。。
-
-水平分表:表字段一样，记录拆分，冷热数据分离，将不同的记录放入不同的表
-publish0
-1
-publish1
-2
-publish2
-3
-
-class Publish0
-
-~~~
-
-### 3.水平分表唯一id问题
-
-~~~
-uuid:asf2342342-235234-45sd
-mysql创建一张表  id value
-
-~~~
-
-### 2.场景
-
-~~~
-100万用户，50万日活，20万条数据，和qps 10分之一  qps1000以内
-20万-》
-mysql单表如果超过1000万数据，性能下降。分表解决问题，业界的标准500-600万要一张表
-
-~~~
-
-### 3.分表分库**mycat**
-
-水平分表
-
-~~~
-表名不一样，表中的字段完全一样，表中记录不一样
-publish1  publish2  
-~~~
+水平分表、垂直分表
 
 垂直分表
 
 ~~~
-表名不一样，字段也不一样
-用户表 一对一拆分。一张表字段超过15个的时候
+一个表中超过30个字段
+表中的字段一部分是高频操作的，一部分是很少操作的
+一对一关系
+user 
+id   name  mobile
+1
+userinfo    
+userid     avater
+1
+~~~
+
+水平分表
+
+~~~
+mysql基础数据的收集，数据量超过1000万性能急速下降，业界标准 500万分表处理
+注册用户10万，日活活跃用户5万，并发访问5000以下，新增3万
+三张表
+~~~
+
+按月分
+
+每个月数据均等，冷热数据分离
+
+平均分
+
+hash取模（用户表）
+
+按用户分
+
+订单表（按用户分）
+
+Userid orderno   money
+
+1         1001       100
+
+1          1002   300
+
+### 2.分表
+
+~~~
+orders0
+id orderno  userid  money  addtime
+
+orders1
+id orderno  userid  money  addtime
+
+orders2
+id orderno  userid  money  addtime
+
+number = hash(userid)%3
+if number ==0:
+  Orders2.objects.create()
+
+订单号
+年月日时分秒+userid+5位随机数
+20231011010101 100110 12341
 ~~~
 
 ### 4.水平分表
@@ -233,12 +200,29 @@ print(int('00010',2))
 #2
 ~~~
 
-~~~
-发布-》图文
-发布接口：
-1.获取数据 title ,picurl
-2.用雪花算法生成唯一id
-#生成发布表的唯一id 
+~~~python
+pip install paramiko
+def update_linux_time():
+  	#导入库
+		import paramiko
+
+    #创建一个sshclient对象
+
+    ssh = paramiko.SSHClient()
+
+    #允许连接不在know_host中的主机
+
+    #ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    #连接主机
+
+    ssh.connect(hostname="服务器ip",port=22,username="用户名",password="密码")
+
+    #执行命令
+
+    ssh_in,ssh_out,ssh_error = ssh.exec_command('')
+
+  
 
 def getsnowcode():
     ncode = snowflake.client.get_guid()
@@ -246,6 +230,13 @@ def getsnowcode():
     code  = r.get('snowcode')
     if code:
         if int(ncode)<=int(code):
+            number = r.get("number")
+            if number:
+               r.incre('number',1)
+            if number >3:
+                #执行脚本
+                update_linux_time()
+            
             return getsnowcode()
     #如果正确返回，如果发生回拨调用自己重新生成
     r.set('snowcode',ncode)
