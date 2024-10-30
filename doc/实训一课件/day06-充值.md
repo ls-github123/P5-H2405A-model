@@ -1,19 +1,82 @@
+### 1.海页数据分页优化
+
 ~~~
-1.分片上传
-2.分表雪花算法
-3.根据文章标题获取分类
-调用获取token的接口 client_id,client_secret，token
-调用requests.post('url',data={"message":message},'headers':{"token":'34234'})
-写入标签表、写入标签发布表
+1  2  3  
+page_size = 10
+start = (page-1)*page_size
+
+select * from 表名 limit start,page_size
+                          990,10
+                          
+  20,19,18,16,15,13,10,8,3,2,1                    
+
+where   order by  id desc limit ,5
+点击每一页，第一页缓存，当前页最小的id放入redis中 r.set('page1',15)
+number = page-1
+maxid = r.get("page"+number)
+
+data = r.get('homepage'+page)
+if data:
+    return Response({"data":json.loads(data)})
+if maxid:
+    data =  where id<maxid order by id desc limit 0,5
+else:
+     start = (page-1)*page_size
+     select * from 表名 order by id desc limit start,5
+     
+ r.set('homepage'+page,json.dumps(data))
+
+ 
+~~~
+
+并发访问缓存中不存在，此时大量的请求落到数据库怎么解决？  
+ 分步式锁setnx()
+
+~~~python
+data = r.get('homepage'+page)
+if data:
+    return Response({"data":json.loads(data)})
+else:
+   if r.setnx('num'+page):
+      if maxid:
+          data =  where id<maxid order by id desc limit 0,5
+      else:
+           start = (page-1)*page_size
+           select * from 表名 order by id desc limit start,5
+           
+
+      r.set()
+      r.delete('num'+page)
+
+   time.sleep(2)
+   data = r.get('homepage'+page)
+	 if data:
+    	return Response({"data":json.loads(data)})
 
 
-fastapi启动服务-》手机号注册接口（jwt）
-                 登录接口
-                 注册应用（应用名、勾选服务）（acl，client_id,client_secret）
-                根据文字描述获取分类接口
-                根据文字描述获取标签接口
-                
-                
+ r.set('homepage'+page,json.dumps(data))
+~~~
+
+延时双删
+
+~~~
+publish表做了首页数据的缓存
+
+1.删除缓存
+2.更新数据
+3.删除缓存
+~~~
+
+接口幂等性操作
+
+~~~
+网络慢用户频繁点击，造成一些有问题的数据加入数据库
+
+1.在onMouted中调用接口，在接口中生成一个唯一的串uuid,把uuid存入redis,返回给前端
+2.前端获取到uuid，点击提交的时候携带uuid，请求生成订单接口
+3.在生成订单的接口中 获取uuid查询redis，如果存在，生成订单，删除uuid从redis，如果不存在返回不能重复生成
+
+
 ~~~
 
 
@@ -22,40 +85,7 @@ fastapi启动服务-》手机号注册接口（jwt）
 
 <img src="images/27.png">
 
-~~~
-充值订单表：
-id  orderno  userid  paytype(1支付  2微信   3网银)  status(1支付中  2成功 3失败)  transaction_no（支付宝流水号）   add_time  pay_time  money
 
-1.点击提交加入充值订单表
-2.生成订单直接调用支付
-3.回调回来验签，订单号第一位加一个类型，1购买订单  2充值订单
-4.判断为2的时候更新充值订单表，更新用户总金额（事务处理）
-
-接口幂等性
-实现思路：
-1.在充值页面mouted中调用接口，在接口中生成一个唯一的token（uuid.hex）存入redis返回,
-2.点击提交的时候携带token,服务查询token是否存在，如果存在操作生成充值订单，清除token，如果不存在提示已经操作过不能重复操作。
-
-
-
-1.创建一张表
-2.写一个vue页面
-3.点击提交写入充值记录表   orderno  userid  paytype(1)  status(1)    add_time  money
-4.获取支付宝链接
-    1.支付宝开放平台-》进入沙箱-》
-
-
-
-选择类型、输入金额-》生成一个充值订单、写入充值记录表-》跳转到支付宝链接，点击支付-》根据回调地址进行回调-》在回调接口验签、更新充值订单表、用户表中的总金额（事务处理）
-
-~~~
-
-
-
-~~~
-
-
-~~~
 
 ~~~
  from django.db import transaction
@@ -76,39 +106,6 @@ transaction.savepoint_commit(save_id)
    except:
      transaction.savepoint_rollback(save_id)
      
-~~~
-
-*ALTER* *TABLEtable*_name*ADD* *INDEX* *index*_name (column1,column2,col
-
-~~~
-海量数据分页优化？
-100 
-select * from table limit 0,10
-select * from table limit 10,10
-select * from table limit 20,10
-....
-select * from table limit 9900,100
-
-利用索引的优势，加where和order by
-select * from table  where code>=9900 limit 0,100 order by id asc
-
-1.点击获取第5页   1001   1002  1005  1008   10  12  18
-判断是否为1，如果1直接获取，page1  9 获取上一页的最大值
-获取第10页  page-1 从redis获取9对应的值 code>=18
-select * from 表名 where  limit start,100
-
-if page  == 1:
-   sql = select * from  order by id asc  limit 0,10
-   redis.set('page1',1008)
-else:
-    key = "page"+str(page-1)
-    value = redis.get(key)
-    if value:
-    	select * from  where id>=value order by id asc limit 0,10
-    else:
-       start = (page-1)*page_size
-       select * from  order by id asc limit  start,10
-
 ~~~
 
 
