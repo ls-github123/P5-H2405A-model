@@ -23,7 +23,12 @@ https://developer.qiniu.com/fusion/1228/fusion-quick-start
 
 ### 2.防盗链
 
+<img src="http://www.jy.com/static/1.jpg" />
+
 ~~~
+1.七牛云平台上添加公司所有的域名
+2.打开视频地址判断，获取到视频对应referer，通过referer查找允许的列表，如果存在才会播放，如果不存在，无权查看
+
 http标准协议中有专门的字段记录referer
 
 1、他可以追溯到请求时从哪个网站链接过来的。
@@ -34,6 +39,8 @@ http标准协议中有专门的字段记录referer
 https://developer.qiniu.com/fusion/3839/domain-name-hotlinking-prevention
 
 ### 3.大文件上传
+
+10G文件网慢、断点续传
 
 ~~~
 大文件
@@ -46,8 +53,8 @@ https://developer.qiniu.com/fusion/3839/domain-name-hotlinking-prevention
 
 1.vant中引入图片上传组件，before_upload方法中获取文件大小，定义每片上传大小，计算总片数
 2.开始上传 splice(0,end),向服务器传递的参数 文件名，文件总大小，总片数，当前这一片的流，当前片数索引
-3.服务器接收，保存在服务器上，abc_1,abc_2,abc_3
-4.服务器判断当前上传索引和总片数是否相同，合并处理，把小文件合并成大文件，将小文件删除
+3.服务器接收，保存在服务器上，在服务器上创建一个临时文件夹名字是文件名
+4.获取文件夹总大小和文件的总大小对比，如果相同说明已经上传完成。合并操作，删除临时文件夹
 5.上传成功合并的时候突然由于网络或服务器问题导致没有合并成功，将文件名和文件大小保存在redis中zset中，合并成功的直接删除，celery定时任务从redis读取文件名以及文件大小去服务器查询小文件总大小，如果小文件总大小和文件大小一致说明上传成功合并失败，合并的操作，删除小文件。如果大小不同把小文件直接删除
 
 
@@ -147,13 +154,6 @@ export default {
     async uploadf(data){
        await this.axios.post('fileupload/',data).then(res=>{
            alert("22")
-            // this.form.imgurl = res.data.url
-            // if(res.data.code == 200){
-            //   alert("上传成功")
-            // }else{
-            //     // this.count++
-            //     // this.afterRead(file)
-            // }
         })
     },
     afterRead(file){
@@ -170,16 +170,6 @@ export default {
         data.append("tcount",this.tcount)
         //当前上传的索引
         data.append("count",this.count)
-        
-        // this.axios.post('fileupload/',data).then(res=>{
-        //     // this.form.imgurl = res.data.url
-        //     if(res.data.code == 200){
-        //       alert("上传成功")
-        //     }else{
-        //         this.count++
-        //         this.afterRead(file)
-        //     }
-        // })
        
         this.uploadf(data)
        
@@ -239,7 +229,7 @@ urlpatterns = [
 
 
 
-~~~
+~~~python
 import os   
 from videoadmin import settings  
 #文件上传
@@ -250,18 +240,52 @@ def fileupload(request):
     filename = data['filename']
     tcount = int(data['tcount'])
     count = int(data['count'])
-    #上传代码
-    with open(f'./static/upload/{filename}.{count}', 'wb') as f:
+    import os   
+import shutil
+ 
+def get_folder_size(folder_path):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(folder_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            try:
+                size = os.path.getsize(fp)
+                total_size += size
+            except OSError:
+                pass  # Ignore files that can't be accessed
+    return total_size
+import uuid
+#文件上传
+def fileupload(request):
+    #获取参数
+    data = request.POST
+    img = request.FILES.get('file')
+    filename = data['filename']
+    tcount = int(data['tcount'])
+    count = int(data['count'])
+    size = int(data['size'])
+    fname = uuid.uuid1().hex
+    #上传代码 os.rename() uuid.uuid().hex
+    arr = filename.split('.')
+    filepath = f'./static/upload/{filename}'
+    if not os.path.exists(filepath):
+        os.mkdir(f'./static/upload/{filename}')
+    
+    with open(f'./static/upload/{filename}/{count}', 'wb') as f:
         for chunk in img.chunks():
             f.write(chunk)
-            f.close()
-    if count == tcount-1:
+            # f.close()
+    fsize = get_folder_size(filepath)
+    if size == fsize:
         #合并
-        with open(f'./static/upload/{filename}', 'wb') as f:
+        with open(f'./static/upload/{fname}.{arr[1]}', 'wb') as f:
             for i in range(tcount):
-                with open(f'./static/upload/{filename}.{i}', 'rb') as chunk:
+                with open(f'./static/upload/{filename}/{i}', 'rb') as chunk:
                     f.write(chunk.read())
-                os.remove(f'./static/upload/{filename}.{i}')
+        #删除文件夹
+        # if os.path.exists(filepath):
+        #     shutil.rmtree(filepath)
+         #os.remove(f'./static/upload/{filename}/{i}')
         return JsonResponse({"code":200})
     else:
          return JsonResponse({"code":10010})
