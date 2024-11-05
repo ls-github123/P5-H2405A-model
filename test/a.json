@@ -1,0 +1,33 @@
+{
+    "stages": [{
+            "name": "提交请求",
+            "actions": [{
+                "type": "submit_request",
+                "parameters": {}
+            }]
+        },
+        {
+            "name": "分配审批者",
+            "actions": [{
+                "type": "assign_approver",
+                "parameters": {
+                    "rules": ["department", "position"]
+                }
+            }]
+        },
+        {
+            "name": "审批者决策",
+            "actions": [{
+                "type": "make_decision",
+                "parameters": {}
+            }]
+        },
+        {
+            "name": "更新状态",
+            "actions": [{
+                "type": "update_status",
+                "parameters": {}
+            }]
+        }
+    ]
+}

@@ -1,72 +1,46 @@
-from elasticsearch import Elasticsearch, helpers  
-import datetime  
-  
-# 连接到 Elasticsearch 客户端  
-es = Elasticsearch(["http://localhost:9200"])  
-  
-# 定义索引名称  
-index_name = "your_index_name"  
-  
-# 定义查询函数  
-def multi_condition_query(time=None, name=None, gender=None):  
-    query = {  
-        "query": {  
-            "bool": {  
-                "must": [],  
-                "should": []  
-            }  
-        }  
-    }  
-      
-    # 添加时间条件（假设时间字段为 'timestamp' 且格式为 ISO 8601）  
-    if time:  
-        time_range_query = {  
-            "range": {  
-                "timestamp": {  
-                    "gte": time.strftime('%Y-%m-%dT%H:%M:%S'),  # 开始时间  
-                    "lte": (time + datetime.timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S')  # 结束时间（到下一天的同一时间）  
-                }  
-            }  
-        }  
-        query["query"]["bool"]["must"].append(time_range_query)  
-      
-    # 添加姓名条件  
-    if name:  
-        name_query = {  
-            "match": {  
-                "name": name  
-            }  
-        }  
-        query["query"]["bool"]["must"].append(name_query)  
-      
-    # 添加性别条件  
-    if gender:  
-        gender_query = {  
-            "match": {  
-                "gender": gender  
-            }  
-        }  
-        query["query"]["bool"]["must"].append(gender_query)  
-      
-    # 如果没有 must 条件，则查询所有（可选）  
-    if not query["query"]["bool"]["must"]:  
-        query["query"]["match_all"] = {}  
-        del query["query"]["bool"]  
-      
-    return query  
-  
-# 示例查询  
-time_condition = datetime.datetime(2023, 10, 1)  # 可选，设置时间条件  
-name_condition = "John Doe"  # 可选，设置姓名条件  
-gender_condition = "male"  # 可选，设置性别条件  
-  
-query = multi_condition_query(time_condition, name_condition, gender_condition)  
-  
-# 打印查询语句  
-print(query)  
-  
-# 执行查询  
-response = es.search(index=index_name, body=query)  
-  
-# 打印查询结果  
-print(response)
+from langchain_community.llms.tongyi import Tongyi
+from langchain.agents import initialize_agent, Tool
+from langchain.agents import AgentType
+import json
+
+# # 初始化语言模型
+llm = Tongyi()
+
+# # 工具函数
+def submit_request(input: str) -> str:
+    # 用户提交一个任务，把任务存在任务列表
+    task = json.loads(input)
+    #读取出任务的信息生成任务写入任务表，返回任务id
+    return "1001"
+    
+def assign_approver(input: str) -> str:
+    # 分配审批者
+    print("###"+input)
+   
+
+def make_decision(users: list) -> str:
+    # 审批者决策
+    pass
+
+def update_status(input: str) -> str:
+    # 更新状态
+    pass
+
+
+# 定义工具
+tools = [
+    Tool(name="submit_request", func=submit_request, description="提交请求,返回任务编号"),
+    Tool(name="assign_approver", func=assign_approver, description="分配审批者"),
+    Tool(name="make_decision", func=make_decision, description="审批者决策"),
+    Tool(name="update_status", func=update_status, description="更新状态")
+]
+
+
+# 初始化代理
+agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION)
+
+# # 查询高价值客户
+data = {"id":1001,"title":"张三请假"}
+res = agent.invoke("提交请求，请求信息为"+json.dumps(data))
+audit = agent.invoke(res['output']+"分配审批者")
+print(audit)

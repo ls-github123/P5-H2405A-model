@@ -163,7 +163,7 @@ db.createCollection("news")
 db.runoob.drop()
 #添加数据
 db.集合名.insert({'id':1,'title':'12'})
-db.集合名.insert({'id':1,'title':'12','name':'sdfsd'})
+db.集合名.insert({'id':1,'title':'12','name':'sdfsd','content':'233'})
 #查询所有
 db.集合名.find()
 #删除数据
@@ -217,7 +217,7 @@ import pymongo
 mongo = pymongo.MongoClient("mongodb://127.0.0.1:27017/")
 my_db = mongo["my_db"]
 
-my_collection = my_db["my_collection"] # 没有往集合里面保存文档之前，mongdb不会真正创建集合!
+my_collection = my_db["news"] # 没有往集合里面保存文档之前，mongdb不会真正创建集合!
 
 # 查看集合列表
 print(my_db.list_collection_names())
@@ -309,7 +309,7 @@ data = { "$set": { "age": 18 } }
 my_collection.update_one(query, data)
 
 # 更新所有文档
-query = { "mobile": {"$regex": "^130"} }
+query = { "heigh": {"$regex": "^130"} }
 data = { "$set": { "age": 18 } }
 my_collection.update_many(query, data)
 ~~~
@@ -376,34 +376,55 @@ print(document_list)
 select o.create_time,o.status,o.account,od.name,od.count,od.price from orders as o inner join detail as od on o.number=od.order_id where userid=o.userid order by o.create_time desc
 ~~~
 
-评价
+评价系统
+
+爬取数据
+
+电影网站，requests+bs4+xpath 存入mongo
+
+Requests三方平台获取数据
+
+评价模块
 
 ~~~
-视频详页面
-id videoid  userid  title  add_time  pid
- 1    1       2      这了看  23        0
- 2    1       5      夺      43       1
+手机详细信息
+
+    好评（100）  中评（30） 差评（10）
+
+    张三：  手机不错    2023-10-01
+             小明：是我也买了
+                。。。
+                    。。。
+                       。。。
+    李四    不好
+    王五    。。。。
+                1   2  3  4  5
+~~~
+
+表设计 
+
+商品表 （mysql）加三个字段    好评（100）  中评（30） 差评（10）
+
+id  name   price     goods_number
+
+1   商品1   10               100
+
+评价表（mongo）
+
+id  评价唯一编号   用户id   商品id   内容   添加时间   级别（ 1好评  2中评  3差评） pid (默认值0 ，代表是评价，不是0回复)
+
+实现流程
+
+~~~
+1.在我的订单中展示商品，在商品信息后面加一个评价按钮
+2.点击评价，弹出一个框，在框中输入内容，点击提交
+3.在接口中接收数据，userid，评价内容，商品id，调用模型去自动判断是1好评  2中评  3差评。写入mongo
+4.在商品详情表中展示评价信息。根据商品id分页读取所有的评价信息
 ~~~
 
 
 
-~~~
-对标的进行评价
-评论
-输入评论信息，写入mongo
-点击标地能查看所有评论，从mongo中查询，支持分页
 
-商品一  1000
-张三 这个商品好吗    2020-10-10   回复
-      李四  这个商品很好           回复
-              。。。。。          回复
-李四  。。。。。。
-
-
-评价表设计
-id  userid  username content  create_time dish_id  pid
-
-~~~
 
 ### 帖子模块
 
