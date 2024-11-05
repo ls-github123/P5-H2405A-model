@@ -420,6 +420,45 @@ id  评价唯一编号   用户id   商品id   内容   添加时间   级别（
 2.点击评价，弹出一个框，在框中输入内容，点击提交
 3.在接口中接收数据，userid，评价内容，商品id，调用模型去自动判断是1好评  2中评  3差评。写入mongo
 4.在商品详情表中展示评价信息。根据商品id分页读取所有的评价信息
+
+id  userid  gooid  comment    pid  topid
+1    1     1       很好        0      0
+2    3     1       是不错       1      1
+3    4     1      .。。        0      0
+4    4     1      .。。        2      1
+
+ids = select * from comment order by pid asc limit 0,10;
+data = select * from comment where topid in (ids)
+
+
+[{},{},{}]
+很好
+   是不错
+       。。。。tree  
+id  label  chirlden
+[{"id":1,'label':comment,'chirlden':[{'chirlden':[{}]},{}]},{},{}]
+
+def xtree(data):
+    if len(data)<=0:
+        return data 
+    #先把列表解析成字典
+    dict = {}
+    for i in data:
+        id = i['id']
+        dict[id] = i
+        
+    #dict = {"1":{"id":1,'label':'234','pid':''},"2":{"id":2,'label':'234','pid':''}}
+    rlist=[]
+    #遍历，判断如果是类父类加入列表，如果不是放到父类下
+    for j in data:
+        pid = j['pid']
+        if pid == 0:
+            rlist.append(j)
+        else:
+            if 'chirlden' not in dict[pid]:
+                dict[pid]['chirlden']=[]
+            dict[pid]['chirlden'].append(j)
+    return rlist
 ~~~
 
 
