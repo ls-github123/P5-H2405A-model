@@ -1,3 +1,155 @@
+发送邮件功能
+
+1.settings中的配制
+
+~~~
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'
+EMAIL_PORT = 25
+#发送邮件的邮箱
+EMAIL_HOST_USER = '18210208326@163.com'
+#在邮箱中设置的客户端授权密码
+EMAIL_HOST_PASSWORD = 'JZiJ6JbUgzfgt7s3'
+#收件人看到的发件人
+EMAIL_FROM = 'A公司<18210208326@163.com>'
+~~~
+
+2.发送代码
+
+~~~python
+from django.core.mail import send_mail  
+from llmpro import settings
+def send_email_view(mail):  
+    subject = '测试邮件主题'  
+    message = '这是测试邮件的内容。'  
+    from_email = settings.EMAIL_HOST_USER  # 可以是 settings.py 中的 EMAIL_FROM  
+    to_email = [mail]  # 收件人邮箱地址列表  
+  
+    # 发送邮件  
+    send_status = send_mail(subject, message, from_email, to_email, fail_silently=False)  
+    print(send_status)
+    return send_status
+    
+class CrmManager(APIView):
+    def get(self,request):
+        # 按客户分组并计算每个客户的总订单金额  
+        # now = datetime.now()
+        # pre = now - timedelta(days=9)
+        # print(pre)
+        # cates = Cates.objects.filter(add_time__lt=now,add_time__gt=pre).values('userid').annotate(total_amount=Sum('numbers')).order_by('total_amount')
+        # for i in cates:
+        #     print(i)
+        send_email_view("763005825@qq.com")
+        return Response({"code":200}) 
+
+~~~
+
+~~~python
+from langchain_community.llms.tongyi import Tongyi
+from langchain.agents import initialize_agent, Tool
+from langchain.agents import AgentType
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
+import json,re
+
+# # 初始化语言模型
+llm = Tongyi()
+
+# # 工具函数
+def top_users(input: str) -> str:
+    # 查询高价值客户
+    list1 = [{"id": 3, "name": "王五"}, {"id": 4, "name": "赵六"}]
+    return json.dumps(list1)
+
+def active_users(input: str) -> str:
+    # 查询近期活跃客户
+    return json.dumps([{"id": 3, "name": "王五"}, {"id": 4, "name": "赵六"}])
+
+def send_survey(users: list) -> str:
+    # 发送问卷给指定客户
+    userlist =json.loads(users)
+    for i in userlist:
+        print("***")
+        print(i['id'])
+  
+    return "问卷已发送成功"
+
+def collect_responses(input: str) -> str:
+    # 收集客户的问卷反馈
+    # responses = [{'id': 1, 'name': '张三', 'satisfaction': 4, 'feedback': '服务很好，但价格偏高'}]
+    return json.dumps([{'id': 1, 'name': '张三', 'satisfaction': 4, 'feedback': '服务很好，但价格偏高'}])
+
+def analyze_feedback(responses: list) -> str:
+    # 使用 RAG 技术分析反馈
+    responses_list = json.loads(responses)
+   
+    feedback_texts = [response["feedback"] for response in responses_list]
+    feedback_summary = "\n".join(feedback_texts)
+    
+    prompt = PromptTemplate(
+        input_variables=["feedback_summary"],
+        template="请分析以下客户反馈，提取关键信息，包括满意度评分和改进建议:\n{feedback_summary}"
+    )
+    
+    chain = LLMChain(llm=llm, prompt=prompt)
+    analysis = chain.run({"feedback_summary": feedback_summary})
+    return analysis
+
+# 定义工具
+tools = [
+    Tool(name="top users", func=top_users, description="查询高价值客户。根据工具的结果返回json"),
+    Tool(name="active users", func=active_users, description="查询近期活跃客户"),
+    Tool(name="send survey", func=send_survey, description="发送问卷给指定客户"),
+    Tool(name="collect responses", func=collect_responses, description="收集客户的问卷反馈"),
+    Tool(name="analyze feedback", func=analyze_feedback, description="分析客户反馈")
+]
+
+
+# 初始化代理
+agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION)
+
+# # 查询高价值客户
+# res = agent.invoke("查询近期活跃客户")
+# print(res)
+
+# # 发送问卷
+top_users_data = agent.invoke("查询高价值客户")
+print(top_users_data)
+
+# 使用正则表达式匹配JSON对象（这里假设JSON对象之间只有一个逗号分隔，且没有空格）  
+json_pattern = r'\{.*?\}'  
+matches = re.findall(json_pattern, top_users_data['output'])  
+  
+# 由于匹配到的JSON对象字符串是独立的，我们需要将它们放入一个数组中（用方括号包围）来形成一个有效的JSON字符串  
+# 但在这个例子中，我们直接解析每个JSON对象字符串为Python字典  
+customer_list = []  
+for match in matches:  
+    try:  
+        # 解析JSON对象字符串为Python字典  
+        customer_dict = json.loads(match)  
+        # 将字典添加到列表中  
+        customer_list.append(customer_dict)  
+    except json.JSONDecodeError:  
+        # 如果解析失败，可以打印错误信息或进行其他处理  
+        print(f"Failed to decode JSON: {match}")  
+  
+# 输出结果  
+print(customer_list)
+
+# send_survey_result = agent.invoke(f"发送问卷给 {top_users_data}")
+# # print(send_survey_result)
+
+# # 收集反馈
+# responses = agent.invoke("收集客户的问卷反馈")
+# print(responses)
+
+# # 分析反馈
+# analysis_result = agent.invoke(f"分析客户反馈 {responses}")
+# print(analysis_result)
+~~~
+
+
+
 ### 1.需求分析
 
 工作流平台，平台可动态创建工作流。工作流配制权限，用户添加任务，进行任务的审批。
@@ -224,7 +376,57 @@ class AuditRecord(models.Model):
 代码实现
 
 ~~~python
+from langchain_community.llms.tongyi import Tongyi
+from langchain.agents import initialize_agent, Tool
+from langchain.agents import AgentType
+import json
 
+# # 初始化语言模型
+llm = Tongyi()
+
+# # 工具函数
+def submit_request(input: str) -> str:
+    # 用户提交一个任务，把任务存在任务列表
+    task = json.loads(input)
+    #读取出任务的信息生成任务写入任务表，返回任务id
+    print("用户提交一个任务，把任务存在任务列表")
+    return "1001"
+    
+def assign_approver(input: str) -> str:
+    # 分配审批者
+    print("分配审批者任务编号为###:::"+input)
+    return "user001"
+   
+
+def make_decision(input: str) -> str:
+    # 审批者决策
+    print("获取到订单号"+input+"给审批者发邮件")
+    return "1"
+
+def update_status(input: str) -> str:
+    # 更新状态
+    print("更新工作流的状态为已经完成"+input)
+    return "更新成功"
+
+
+# 定义工具
+tools = [
+    Tool(name="submit_request", func=submit_request, description="提交请求,返回任务编号"),
+    Tool(name="assign_approver", func=assign_approver, description="分配审批者,返回审批者id"),
+    Tool(name="make_decision", func=make_decision, description="审批者决策"),
+    Tool(name="update_status", func=update_status, description="更新状态")
+]
+
+
+# 初始化代理
+agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION)
+
+# # 查询高价值客户
+data = {"id":1001,"title":"张三请假"}
+res = agent.invoke("提交请求，请求信息为"+json.dumps(data))
+r1 = agent.invoke(res['output']+"分配审批者")
+agent.invoke(r1['output']+'审批者决策')
+res1 = agent.invoke('任务id为:'+res['output']+",状态为1。更新状态")
 ~~~
 
 
