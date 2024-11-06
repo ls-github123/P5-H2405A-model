@@ -1,3 +1,5 @@
+1.消息推送、基金、股票、监控、聊天系统
+
 ### 1.websocket介绍
 
 ~~~
@@ -126,13 +128,48 @@ send发送消息
 onclose关闭
 ~~~
 
+应用场景
 
+农业系统
+
+~~~
+
+A  草莓
+B  苹果
+创建一张表  
+编号  种植名称  最低温度  最高温度
+1001  草莓       10        30
+
+温度、湿度 传感器
+时时获取到温度，通过温度去数据中对比，如果有异常，发送推送消息给Vue
+
+~~~
+
+基金时时显示
+
+~~~
+基金公司合作，开放一个接口
+requests读取接口信息
+A基金    100
+B基金     200
+C基金     50
+
+Vue用echarts显示每支基金的时时价格
+
+写一个接口，requests读取三方接口携带token，返回数据处理，websocket推送到Vue，vue用echarts展示
+~~~
+
+聊天业务 ，用户和客服聊天
+
+~~~
+vue页面 开始咨询
+用户点击开始咨询建立一个websocket连接，Vue new websocket，携带当前用户的id，服务端接收建立连接。以用户id创建一个组，{"user1001":"conn"}
+客户端向服务端发送消息，服务端根据userid找到链接进行操作
+~~~
 
 ### 3.使用
 
 由于channels 4.0.0 将daphne组件视为可选项（https://stackoverflow.com/a/76080493/11442415），所以如果要使用最新版，应该额外安装该组件。操作如下：
-
-
 
 1. 先升级django、channels、channels-redis至最新版：
 
@@ -181,9 +218,7 @@ onclose关闭
 
 ~~~
 django==4.0.5
-
 channels==3.0.5
-
 channels-redis==2.4.2
 ~~~
 
@@ -203,7 +238,7 @@ INSTALLED_APPS = [
 
 ~~~
 
-3.在 settings.py 中添加 asgi_application
+3.在 settings.py 中添加 asgi_application，ws_demo项目名
 
 ```python
 	ASGI_APPLICATION = 'ws_demo.asgi.application'
@@ -272,7 +307,8 @@ class ChatConsumer(WebsocketConsumer):  # 继承WebsocketConsumer
         # cls = ChatConsumer
         # self.room_group_name = cls.room_name
         # print(self.scope['url_route']['kwargs'])
-        self.group_name = self.scope['url_route']['kwargs']['group']
+        #self.group_name = self.scope['url_route']['kwargs']['group']
+        self.group_name ='2'
         # self.channel_layer.group_add(self.group_name,self.channel_name)
        
         async_to_sync(self.channel_layer.group_add)(self.group_name, self.channel_name)
@@ -326,87 +362,68 @@ daphne education.asgi:application
 
 ~~~vue
 <template>
-  <div>
-  <div id='message'></div>
-  <el-input v-model="sendms"></el-input>
-  <el-button @click='submit'>提交</el-button>
-  </div>
+<div>
+
+ <el-row>
+    <el-col :span="10"><div class="grid-content ep-bg-purple-dark" />
+    <ul>
+    <li v-for="i in mlist" >
+    {{i}}
+    
+    </li>
+   
+    </ul>
+    </el-col>
+  
+ </el-row>
+
+  
+  
+</div>
 </template>
 
-<script>
-export default {
-    data(){
-        return{
-            socket:null,
-            sendms:'',
-            chatname:''
+<script lang="ts" setup>
+import {ref,onMounted}  from 'vue'
 
-        }
-    },
-    methods: {
-        submit(){
-            this.socket.send("23423423")
-        },
-        initweb(){
-          this.chatname = this.$route.query.id
-          alert(this.chatname)
-            // 创建websocket对象，向后台发送请求
- this.socket = new WebSocket("ws://localhost:8000/room/"+this.chatname+"/");
+//搜索用的
+const socket = ref(null)
+const mlist=ref([{"id":1,"name":"张三"},{"id":2,"name":"李四"}])
 
-// 当客户端和服务端刚创建好连接(self.accept)之后，自动触发.
-this.socket.onopen = function (event){
-  let tag = document.createElement("div");
-  tag.innerText = "[连接成功]";
-  document.getElementById("message").appendChild(tag);
-}
 
-// 回调函数，客户端接收服务端消息
-this.socket.onmessage = function (event){
-  alert("33")
-  let tag = document.createElement("div");
-  tag.innerText = event.data;
-  document.getElementById("message").appendChild(tag);
-}
+const initwesockt=()=>{
+    socket.value = new WebSocket("ws://localhost:8000/room/1");
 
-// 当断开连接时，触发该函数
-this.socket.onclose =function (event){
-  let tag = document.createElement("div");
-  tag.innerText = "[连接断开]";
-  document.getElementById("message").appendChild(tag);
-}
+    // 当客户端和服务端刚创建好连接(self.accept)之后，自动触发.
+    socket.value.onopen =  (event)=>{
+        console.log("连接成功")
+    }
 
-// function sendMessage(){
-//   let tag = document.getElementById("txt");
-//   socket.send(tag.value);
-// }
+    // 回调函数，客户端接收服务端消息
+    socket.value.onmessage =  (event)=>{
+    
+        var data  = JSON.parse(event.data)
+        //data {"name":'zs',"id":1}
+        mlist.value.push(data)
+    }
 
-// function closeMessage(){
-//   socket.close();
-// }
+    // // 当断开连接时，触发该函数
+    // this.socket.onclose =function (event){
+    // let tag = document.createElement("div");
+    // tag.innerText = "[连接断开]";
+    // document.getElementById("message").appendChild(tag);
+    // }
 
-// function handleKeyPress(event){
-//   if (event.keyCode === 13){
-//     document.getElementById("send").click();
-//     document.getElementById("txt").value = "";
-//   }
-// }
-
-// document.onkeydown = handleKeyPress;
-
-        }
-    },
-
-    mounted() {
-        this.initweb()
-    },
 
 }
+
+onMounted(()=>{
+    initwesockt()
+})
 </script>
 
-<style>
-
-</style>
 ~~~
+
+
 
 ### 推送视图
 
@@ -420,7 +437,7 @@ class Test(APIView):
         # update = AllDataConsumersUpdate()
         # update.all_active_visit_data()
         channel_layer = get_channel_layer()
-        send_data = {"name":'234'}
+        send_data = {"name":rand.randint(1,100)}
         async_to_sync(channel_layer.group_send)(
             '2',#房间组名
             {
