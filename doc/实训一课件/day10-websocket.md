@@ -356,8 +356,6 @@ pip install daphne
 daphne education.asgi:application
 ~~~
 
-
-
 7.vue调用
 
 ~~~vue
@@ -587,8 +585,99 @@ async def process_url(session, url):
         # 处理请求失败的情况
         print(f"Error processing URL {url}: {e}")
     print('++++++++++++++结束定时任务+++++++++')
+~~~
+
+echarts时时显示
+
+接口
+
+~~~python
+class TestWebsocketAPI(APIView):
+    def get(self,request):
+        n1 = request.GET.get("n1")
+        n2 = request.GET.get("n2")
+        n3 = request.GET.get("n3")
+        nlist = [n1,n2,n3]
+        
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            'home',#房间组名
+            {
+                'type':'send_to_chrome', #消费者中处理的函数
+                'data':nlist
+            }
+        )
+        return JsonResponse({"code":200,"msg":"更新数据成功"})
+~~~
+
+vue
+
+~~~vue
+<template>
+  <div>
+  <div id="main" style="width:500px;height:300px;"></div>
+  <!-- 请输入问题<el-input v-model="mes"></el-input>
+  <el-button @click="submit">提交</el-button>
+  {{answer}} -->
+
+  </div>
+</template>
+
+<script lang="ts" setup>  
+import { ref,onMounted } from 'vue'  
+import http from "../http";  
+import * as echarts from 'echarts';
 
 
+const orderlist = ref([1001,1002,1003])
+const countlist = ref([100,200,50])
+const websocket =ref()
+
+const initwebsocket=()=>{
+    websocket.value = new WebSocket("ws://localhost:8000/room/home/");
+    websocket.value.onopen =  (event)=>{
+        alert('连接成功')
+    }
+    websocket.value.onmessage =  (event)=>{
+        console.log(JSON.parse(event.data))
+        countlist.value = JSON.parse(event.data) 
+        initecharts()
+    }
+                
+}
+const initecharts=()=>{
+    var chartDom = document.getElementById('main');
+var myChart = echarts.init(chartDom);
+var option;
+
+option = {
+  xAxis: {
+    type: 'category',
+    data:orderlist.value
+  },
+  yAxis: {
+    type: 'value'
+  },
+  series: [
+    {
+      data: countlist.value,
+      type: 'line'
+    }
+  ]
+};
+
+option && myChart.setOption(option);
+}
+
+onMounted(() => { 
+    initwebsocket()
+    initecharts() 
+}) 
+</script>
+
+<style>
+
+</style>
 ~~~
 
 
