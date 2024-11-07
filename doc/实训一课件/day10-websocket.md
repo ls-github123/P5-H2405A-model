@@ -312,6 +312,15 @@ class ChatConsumer(WebsocketConsumer):  # 继承WebsocketConsumer
         # self.channel_layer.group_add(self.group_name,self.channel_name)
        
         async_to_sync(self.channel_layer.group_add)(self.group_name, self.channel_name)
+        #判断是用户还是客服，如果是用户，给客服发送用户信息，房间号是客服id
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            'home',#房间组名
+            {
+                'type':'send_to_chrome', #消费者中处理的函数
+                'data':{"id":1,"name":'zs'}
+            }
+        )
        
       
        # 有客户端向后端发送 WebSocket 连接的请求时，自动触发(握手)
@@ -321,8 +330,16 @@ class ChatConsumer(WebsocketConsumer):  # 继承WebsocketConsumer
    def websocket_receive(self, message):
        # 浏览器基于 WebSocket 向后端发送数据，自动触发接收消息
        print(message)
-       self.send("不要回复不要回复！！！")
-
+       #self.send("不要回复不要回复！！！")
+       channel_layer = get_channel_layer()
+       async_to_sync(channel_layer.group_send)(
+            'home',#房间组名
+            {
+                'type':'send_to_chrome', #消费者中处理的函数
+                'data':nlist
+            }
+        )
+        
        
     
 
@@ -616,9 +633,9 @@ vue
 <template>
   <div>
   <div id="main" style="width:500px;height:300px;"></div>
-  <!-- 请输入问题<el-input v-model="mes"></el-input>
+   请输入问题<el-input v-model="mes"></el-input>
   <el-button @click="submit">提交</el-button>
-  {{answer}} -->
+  {{answer}} 
 
   </div>
 </template>
@@ -644,6 +661,9 @@ const initwebsocket=()=>{
         initecharts()
     }
                 
+}
+const submit=()=>{
+   websocket.value.onsend({"userid":1,'mes':mes.value})
 }
 const initecharts=()=>{
     var chartDom = document.getElementById('main');
@@ -680,5 +700,11 @@ onMounted(() => {
 </style>
 ~~~
 
+聊天系统
 
+用户界面
+
+![image-20241107140003833](images/image-20241107140003833.png)
+
+![image-20241107140908310](images/image-20241107140908310.png)
 
