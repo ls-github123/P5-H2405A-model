@@ -708,3 +708,12 @@ onMounted(() => {
 
 ![image-20241107140908310](images/image-20241107140908310.png)
 
+动态分配客服
+
+~~~
+kflist = ['1001','1002','1003']
+number = hash(userid)%len(kflist)
+kfid = kflist[number]
+
+~~~
+
