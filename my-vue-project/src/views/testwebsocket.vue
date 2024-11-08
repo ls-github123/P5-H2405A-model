@@ -19,9 +19,11 @@ import * as echarts from 'echarts';
 const orderlist = ref([1001,1002,1003])
 const countlist = ref([100,200,50])
 const websocket =ref()
+const userid = route.query.id
 
 const initwebsocket=()=>{
-    websocket.value = new WebSocket("ws://localhost:8000/room/home/");
+  const room = "user:"+userid.value
+    websocket.value = new WebSocket("ws://localhost:8000/room/"+room+"/");
     websocket.value.onopen =  (event)=>{
         alert('连接成功')
     }
