@@ -154,6 +154,12 @@ print(customer_list)
 
 ![image-20241111090249874](images/image-20241111090249874.png)
 
+权限配制
+
+添加角色、添加用户（选择角色）-》点击权限配制
+
+![image-20241111141225882](/Users/hanxiaobai/Library/Application Support/typora-user-images/image-20241111141225882.png)
+
 用户-》展示工作流-》点击我要请假-》产生任务-》任务审批
 
 ![image-20241111084700046](images/image-20241111084700046.png)
@@ -181,6 +187,13 @@ print(customer_list)
   <tr><td>id</td><td>int</td><td>id</td><td>主键自增</td></tr>
   <tr><td>name</td><td>varchar(50)</td><td>职位名</td><td>唯一</td></tr>
 </table>
+角色表
+
+<table>
+  <tr><td>字段名</td><td>字段类型</td><td>中文名</td><td>描述</td></tr>
+  <tr><td>id</td><td>int</td><td>id</td><td>主键自增</td></tr>
+  <tr><td>name</td><td>varchar(50)</td><td>角色名</td><td>唯一</td></tr>
+</table>
 
 用户表
 
@@ -189,21 +202,20 @@ print(customer_list)
   <tr><td>id</td><td>int</td><td>id</td><td>主键自增</td></tr>
   <tr><td>name</td><td>varchar(50)</td><td>部门名</td><td>唯一</td></tr>
   <tr><td>dept_id</td><td>int</td><td>部门id</td><td>外键关联部门</td></tr>
+  <tr><td>role_id</td><td>int</td><td>角色id</td><td>外键关联角色表</td></tr>
   <tr><td>position_id</td><td>int</td><td>职位id</td><td>外键关联职位</td></tr>
 </table>
+
 工作流表
-
-params 
-
-[{"f_name":"","f_type":"int","f_desc":""},{"f_name":"","f_type":"int","f_desc":""},{"f_name":"","f_type":"int","f_desc":""},{"f_name":"","f_type":"int","f_desc":""}]
 
 <table>
   <tr><td>字段名</td><td>字段类型</td><td>中文名</td><td>描述</td></tr>
   <tr><td>id</td><td>int</td><td>id</td><td>主键自增</td></tr>
   <tr><td>name</td><td>varchar(50)</td><td>名称</td><td>唯一</td></tr>
-  <tr><td>params</td><td>text</td><td>参数字段</td><td>json序列化存储</td></tr>
+  <tr><td>params</td><td>text</td><td>参数字段</td><td>json序列化存储[{"f_name":"","f_type":"int","f_desc":""},{"f_name":"","f_type":"int","f_desc":""},{"f_name":"","f_type":"int","f_desc":""},{"f_name":"","f_type":"int","f_desc":""}]</td></tr>
   <tr><td>status</td><td>int</td><td>状态</td><td>1可用  2停用</td></tr>
 </table>
+
 
 工作流权限表
 
@@ -344,11 +356,19 @@ class AuditRecord(models.Model):
 
 #### 2.添加职位
 
-#### 3.添加员工
+#### 3.添加角色
+
+#### 4.添加员工（选择部门、职位、角色）
 
 #### 4.添加工作流
 
 #### 5.给工作流配制角色权限
+
+​         写入工作流程角色表
+
+​         用户登录，登录成功后查询角色id，根据角色id查询工作流配制角色权限表，显示用户工作流列表
+
+
 
 #### 6.给工作流配制审批流程
 
