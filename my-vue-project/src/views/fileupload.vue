@@ -5,9 +5,9 @@
     :show-file-list="false"
     :before-upload="beforeAvatarUpload"
   >
-   
     <el-icon  class="avatar-uploader-icon">上传</el-icon>
   </el-upload>
+
   
   <el-input v-model="mes"></el-input> 
   <el-button @click="submit">提交</el-button>

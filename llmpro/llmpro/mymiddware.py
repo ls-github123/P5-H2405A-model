@@ -4,6 +4,8 @@ from tools.myjwt import mjwt
 from tools.mredis import mredis
 import time,json
 
+        
+        
 class PermitionMiddleware(MiddlewareMixin):
     def process_request(self,request):
         #定义白名单

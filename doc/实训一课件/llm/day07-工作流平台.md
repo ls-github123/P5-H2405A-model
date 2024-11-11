@@ -148,9 +148,19 @@ print(customer_list)
 # print(analysis_result)
 ~~~
 
-
-
 ### 1.需求分析
+
+管理员-》后台管理系统-》添加工作流-》配制审批权限-》用户权限
+
+![image-20241111090249874](images/image-20241111090249874.png)
+
+用户-》展示工作流-》点击我要请假-》产生任务-》任务审批
+
+![image-20241111084700046](images/image-20241111084700046.png)
+
+![image-20241111084610470](images/image-20241111084610470.png)
+
+![image-20241111084631635](images/image-20241111084631635.png)
 
 工作流平台，平台可动态创建工作流。工作流配制权限，用户添加任务，进行任务的审批。
 
@@ -181,8 +191,11 @@ print(customer_list)
   <tr><td>dept_id</td><td>int</td><td>部门id</td><td>外键关联部门</td></tr>
   <tr><td>position_id</td><td>int</td><td>职位id</td><td>外键关联职位</td></tr>
 </table>
-
 工作流表
+
+params 
+
+[{"f_name":"","f_type":"int","f_desc":""},{"f_name":"","f_type":"int","f_desc":""},{"f_name":"","f_type":"int","f_desc":""},{"f_name":"","f_type":"int","f_desc":""}]
 
 <table>
   <tr><td>字段名</td><td>字段类型</td><td>中文名</td><td>描述</td></tr>
