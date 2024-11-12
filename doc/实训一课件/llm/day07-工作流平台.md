@@ -150,6 +150,30 @@ print(customer_list)
 
 ### 1.需求分析
 
+管理员动态添加工作流
+
+工作流  配制角色（用户）
+
+工作流 审批配制  第一审批人  第二审批人
+
+用户操作-》登录-》我的菜单-》点击某个菜单-》产生任务-》走任务审批流程
+
+表设计
+
+职位表：id、职位名称
+
+用色表：id、角色名称
+
+用户表：id、手机号、角色id
+
+工作流表：id、名称、参数（text）[{"l_name":"name","l_type":"string","l_desc":"姓名"},{"l_name":"name","l_type":"string","l_desc":"开始时间"},{"l_name":"name","l_type":"string","l_desc":"姓名"}]
+
+工作流角色表：工作流id、角色id
+
+工作流节点审批表：工作流id、职位id、步骤
+
+
+
 管理员-》后台管理系统-》添加工作流-》配制审批权限-》用户权限
 
 ![image-20241111090249874](images/image-20241111090249874.png)
@@ -192,13 +216,15 @@ print(customer_list)
 
 查询此用户的部门id 为2，查询用户表中职位id为4并且部门id为2   小李
 
-Users.objects.filer(dept_id=2,职位id__in(2,3,4)).all()
+Users.objects.fiter(dept_id=2,职位id__in(2,3,4)).all()
 
 张三-》小明-》小李
 
 <img src="images/image-20241111084610470.png">
 
 ![image-20241111084631635](images/image-20241111084631635.png)
+
+点击提交-》写入任务表-》进行审批流程
 
 工作流平台，平台可动态创建工作流。工作流配制权限，用户添加任务，进行任务的审批。
 
@@ -312,6 +338,14 @@ class Position(models.Model):
     name = models.CharField(max_length=50, unique=True)  # 职位名，唯一  
   
     def __str__(self):  
+        return self.name 
+      
+# 部门模型  
+class Roles(models.Model):  
+    id = models.AutoField(primary_key=True)  # 主键自增，Django默认会为主键字段添加AutoField，所以这一行可以省略  
+    name = models.CharField(max_length=50, unique=True)  # 部门名，唯一  
+  
+    def __str__(self):  
         return self.name  
   
 # 用户模型（注意：通常Django会使用内置的User模型，这里为了匹配您的表结构，我们自定义一个）  
@@ -320,6 +354,7 @@ class CustomUser(models.Model):
     name = models.CharField(max_length=50, unique=True)  # 注意：这里应该是用户名而不是部门名，为了匹配您的表结构，我们暂时保留  
     dept_id = models.ForeignKey(Department, on_delete=models.CASCADE)  # 部门id，外键关联部门  
     position_id = models.ForeignKey(Position, on_delete=models.CASCADE)  # 职位id，外键关联职位  
+   role_id = models.ForeignKey(Roles, on_delete=models.CASCADE) 
   
     def __str__(self):  
         return self.name  
