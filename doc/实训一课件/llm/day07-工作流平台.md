@@ -158,13 +158,45 @@ print(customer_list)
 
 添加角色、添加用户（选择角色）-》点击权限配制
 
-![image-20241111141225882](/Users/hanxiaobai/Library/Application Support/typora-user-images/image-20241111141225882.png)
+![image-20241111141225882](images/image-20241111141225882.png)
+
+配制审批权限，写入工作流审批节点配制点
+
+![image-20241112084452840](images/image-20241112084452840.png)
 
 用户-》展示工作流-》点击我要请假-》产生任务-》任务审批
 
-![image-20241111084700046](images/image-20241111084700046.png)
+登录后显示下面菜单
 
-![image-20241111084610470](images/image-20241111084610470.png)
+查询用户表获取roleid->根据角色id查询工作流权限表-》获取到工作流-》[{“id”:1,'name':"加班申请"}]
+
+![image-20241111084700046](images/image-202411110847000461.png)
+
+点击加班申请-》
+
+1.请求接口获取工作的信息，根据id查询工作流表,获取基本信息，params json.loads进行转换
+
+2.根据工作id查询工作流审批节点配制点，根据level字段进行order_by排序
+
+职位id           顺序          
+
+2                     1
+
+3                     2
+
+4                     3
+
+查询此用户的部门id 为2，查询用户表中职位id为2并且部门id为2   张三
+
+查询此用户的部门id 为2，查询用户表中职位id为3并且部门id为2   小明
+
+查询此用户的部门id 为2，查询用户表中职位id为4并且部门id为2   小李
+
+Users.objects.filer(dept_id=2,职位id__in(2,3,4)).all()
+
+张三-》小明-》小李
+
+<img src="images/image-20241111084610470.png">
 
 ![image-20241111084631635](images/image-20241111084631635.png)
 
@@ -232,9 +264,10 @@ print(customer_list)
   <tr><td>字段名</td><td>字段类型</td><td>中文名</td><td>描述</td></tr>
   <tr><td>id</td><td>int</td><td>id</td><td>主键自增</td></tr>
   <tr><td>workflow_id</td><td>int</td><td>工作流id</td><td>外键关联工作流表</td></tr>
-  <tr><td>role_id</td><td>int</td><td>角色id</td><td>外键关联角色表</td></tr>
-  <tr><td>level</td><td>int</td><td>步骤</td><td></td></tr>
+  <tr><td>职位_id</td><td>int</td><td>职位id</td><td>外键关联职位表</td></tr>
+  <tr><td>level</td><td>int</td><td>步骤</td><td>1</td></tr>
 </table>
+
 
 任务表
 
