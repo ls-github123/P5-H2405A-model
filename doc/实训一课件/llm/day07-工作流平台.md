@@ -487,21 +487,46 @@ llm = Tongyi()
 
 # # 工具函数
 def submit_request(input: str) -> str:
-    # 用户提交一个任务，把任务存在任务列表
+    # 用户提交一个任务，把任务存在任务列表，下一操作人
     task = json.loads(input)
+    #获取到用户id  task['userid']
+    #根据用户id获取用户部门id
+    # 获取工作流id  task['workflowid']
+    #根据工作流id查询工作流结点审批表中第一个审批职位
+    #查询用户表中审批人id，条件部门id和职位id
     #读取出任务的信息生成任务写入任务表，返回任务id
     print("用户提交一个任务，把任务存在任务列表")
     return "1001"
     
 def assign_approver(input: str) -> str:
     # 分配审批者
+    #input:任务id
+    #根据任务id获取下一审批人，发送邮件给当前审批人
     print("分配审批者任务编号为###:::"+input)
     return "user001"
    
 
 def make_decision(input: str) -> str:
     # 审批者决策
-    print("获取到订单号"+input+"给审批者发邮件")
+    #input = {"taskid":1,'level':1,'audit_id':1,'agree':1}
+    #写入审批记录表 taskid  audit_id  is_agree  level audit_time
+    data = json.loads(input)
+    #1说明同意
+    if data['agree'] == 1:
+        #更新下一审批人
+        #根据taskid查询任务表，获取到工作流id
+        #查询工作流结点审批表 ,条件是工作流id和大于当前等级的职位id
+        #如果存在
+          #查询用户表，部门id职位id
+          #更新任务表中下一审批人
+          return {"audit_user":1}
+        #如果没有审批人已经是最后一个审批人
+          return {"taskid":3}
+    else:
+      pass
+        
+    #更新任务表中下一操作人
+    #查询任务
     return "1"
 
 def update_status(input: str) -> str:
@@ -522,12 +547,20 @@ tools = [
 # 初始化代理
 agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION)
 
-# # 查询高价值客户
-data = {"id":1001,"title":"张三请假"}
+# 查询高价值客户
+data = {"id":1001,"title":"张三请假","start_time":"2024-10-01 8:00:00"}
 res = agent.invoke("提交请求，请求信息为"+json.dumps(data))
 r1 = agent.invoke(res['output']+"分配审批者")
-agent.invoke(r1['output']+'审批者决策')
-res1 = agent.invoke('任务id为:'+res['output']+",状态为1。更新状态")
+
+
+#接收参数判断审批人页面操作 同意和不同意
+data = {"taskid":1,'level':1,'audit_id':1,'agree':1}
+r2 = agent.invoke('审批者决策'+json.dumps(data))
+ress1 = r2['output']
+if 'audit_user' in ress1:
+     agent.invoke(res['output']+"分配审批者")
+else:
+	 res1 = agent.invoke('任务id为:'+res['output']+",状态为1。更新状态")
 ~~~
 
 
